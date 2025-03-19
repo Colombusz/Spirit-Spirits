@@ -1,33 +1,76 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
-// Import Screens
+// Screens
 import HomeScreen from '../screens/admin/index';
 import Login from '../screens/common/login';
 import About from '../screens/common/about';
 
-// 449px x 961px = 1080px x 1400px || Screen Size Google Pixel 8a / POCO M5s
-
+// Custom Drawer 
+import AppDrawer from '../components/common/appdrawer';
 
 const Stack = createStackNavigator();
 
 const Navigator = () => {
-    return (
-        <NavigationContainer>
-            <Stack.Navigator initialRouteName="About">
-                {/* User / Non User Screens */}
-                <Stack.Screen name="About" component={About} />
-                <Stack.Screen name="Login" component={Login} />
+  const [drawerVisible, setDrawerVisible] = useState(false);
 
-                {/* User Screens */}
+  return (
+    <NavigationContainer>
+      <View style={{ flex: 1 }}>
+        {/* Floating Menu Icon */}
+        <TouchableOpacity 
+          style={styles.floatingButton}
+          onPress={() => setDrawerVisible(true)}
+        >
+          <Ionicons name="menu" size={30} color="#000" />
+        </TouchableOpacity>
+
+        <Stack.Navigator initialRouteName="About" screenOptions={{ headerShown: false }}>
+        {/* Dito ang malupit nating browser router xD */}
+          <Stack.Screen name="About" component={About} />
+          <Stack.Screen name="Login" component={Login} />
+          <Stack.Screen name="Adminhome" component={HomeScreen} />
 
 
-                {/* Admin Screens */}
-                <Stack.Screen name="Adminhome" component={HomeScreen} />
-            </Stack.Navigator>
-        </NavigationContainer>
-    );
+        </Stack.Navigator>
+
+        {/* Drawer Overlay */}
+        {drawerVisible && (
+          <View style={styles.drawerOverlay}>
+            <AppDrawer 
+              closeDrawer={() => setDrawerVisible(false)}
+            />
+          </View>
+        )}
+      </View>
+    </NavigationContainer>
+  );
 };
 
 export default Navigator;
+
+const styles = StyleSheet.create({
+  floatingButton: {
+    position: 'absolute',
+    top: 40,
+    left: 20,
+    zIndex: 10,
+    backgroundColor: 'white',
+    padding: 5,
+    borderRadius: 20,
+    elevation: 5,
+  },
+  drawerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: 240, // Expanded width
+    height: '100%',
+    backgroundColor: '#fff',
+    zIndex: 20,
+    elevation: 10,
+  },
+});
