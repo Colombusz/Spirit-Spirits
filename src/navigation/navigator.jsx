@@ -3,8 +3,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
 // Import Screens
-import HomeScreen from '../screens/HomeAdmin';
-import Login from '../screens/LoginUserAdmin';
+import HomeScreen from '../screens/admin/index';
+import Login from '../screens/common/login';
 import About from '../screens/common/about';
 
 // 449px x 961px = 1080px x 1400px || Screen Size Google Pixel 8a / POCO M5s
