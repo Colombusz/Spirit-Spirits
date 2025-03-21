@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, Button, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import Constants from 'expo-constants';
 import { useDispatch } from 'react-redux';
 import { setUser } from '../../redux/reducers/loginReducer';
 import { storeUser } from '../../utils/storage';
 import { useSQLiteContext } from 'expo-sqlite';
+import { GoogleSignin, GoogleSigninButton, isSuccessResponse } from '@react-native-google-signin/google-signin';
 
 const Login = () => {
   const dispatch = useDispatch();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const db = useSQLiteContext(); 
 
@@ -27,7 +29,6 @@ const Login = () => {
       const data = await res.json();
       
       if (data.success) {
-        // Pass the database instance to storeUser
         storeUser(db, { ...data.user, token: data.token });
         dispatch(setUser(data.user));
         Alert.alert('Login Successful');
@@ -40,13 +41,27 @@ const Login = () => {
     }
   };
 
-  // When the Google login response comes in, trigger the backend login
-  // useEffect(() => {
-  //   if (response?.type === 'success') {
-  //     const { id_token } = response.params;
-  //     handleGoogleLogin(id_token);
-  //   }
-  // }, [response]);
+  // Placeholder for Google sign-in
+  const handleGoogleSignIn = async () => {
+    try {
+      setIsSubmitting(true);
+      await GoogleSignin.hasPlayServices();
+      const response = await GoogleSignin.signIn();
+      if(isSuccessResponse(response)) {
+        const { idToken, user } = response.data;
+        const { email, name, photo } = user;
+
+        console.log('Google sign-in success:', { email, name, photo });
+        // initiate Google sign in, then use handleGoogleLogin to send idToken to backend.
+        handleGoogleLogin(idToken);
+      }
+      setIsSubmitting(false);
+    } catch (error) {
+      setIsSubmitting(false);
+      console.error('Google sign-in error:', error);
+      Alert.alert('Google sign-in error', error.message);
+    }
+  };
 
   // Handler for Google login: sends idToken to the backend and handles the response
   const handleGoogleLogin = async (idToken) => {
@@ -59,7 +74,6 @@ const Login = () => {
       const data = await res.json();
       
       if (data.success) {
-        // Pass the database instance to storeUser
         storeUser(db, { ...data.user, token: data.token });
         dispatch(setUser(data.user));
         Alert.alert('Google Login Successful');
@@ -90,12 +104,15 @@ const Login = () => {
         secureTextEntry
       />
       <Button title="Login" onPress={handleLogin} />
+      
       <View style={{ marginVertical: 12 }}>
-        {/* <Button
-          title="Sign in with Google"
-          disabled={!request}
-          onPress={() => promptAsync()}
-        /> */}
+        <GoogleSigninButton
+          size={GoogleSigninButton.Size.Wide}
+          color={GoogleSigninButton.Color.Dark}
+          onPress={handleGoogleSignIn}
+          disabled={isSubmitting}
+        />
+        {isSubmitting && <ActivityIndicator size="small" color="black" style={{ marginTop: 8 }} />}
       </View>
     </View>
   );
