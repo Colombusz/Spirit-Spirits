@@ -8,13 +8,11 @@ import userReducer from './reducers/loginReducer';
 
 // const middleware = [thunk];
 
-const store = configureStore(
-    {
-        reducer: {
-            user: userReducer,
-           },
-            
-    }
-);
+const store = configureStore({
+    reducer: {
+        user: userReducer,
+        
+    },      
+});
 
 export default store;

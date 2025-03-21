@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "spirit",
-    "slug": "spirit",
+    "name": "spiritspirits",
+    "slug": "spiritspirits",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/ghost.png",
@@ -12,17 +12,37 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "ios": {
-      "supportsTablet": true
+    "extra": {
+      "BACKEND_URL": "http://localhost:5000",
+      "eas": {
+        "projectId": "b577b503-6578-436e-bfe3-bc3623f1acc5"
+      }
     },
     "android": {
+      "package": "com.spiritspirits.app",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/reimu_marisa.png",
+        "foregroundImage": "./assets/ghost.png",
         "backgroundColor": "#ffffff"
       }
     },
     "web": {
       "favicon": "./assets/ghost.png"
-    }
+    },
+    "plugins": [
+      ["@react-native-google-signin/google-signin", 
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.1030795510253-bhis6636p0c9pun72t1gtjf7p1877k9h"
+        }
+      ],
+      ["expo-sqlite", { 
+        "enableFTS": true,
+        "useSQLCipher": true,
+        "android": {
+            "enableFTS": false,
+            "useSQLCipher": false
+        } 
+      }]
+    ],
+    "owner": "reimuhakurei"
   }
 }

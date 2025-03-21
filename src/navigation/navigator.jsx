@@ -1,8 +1,11 @@
+// navigator.jsx
 import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { SQLiteProvider } from 'expo-sqlite';
+import { migrateDbIfNeeded } from '../utils/storage';
 
 // Screens
 import HomeScreen from '../screens/admin/index';
@@ -18,35 +21,32 @@ const Navigator = () => {
   const [drawerVisible, setDrawerVisible] = useState(false);
 
   return (
-    <NavigationContainer>
-      <View style={{ flex: 1 }}>
-        {/* Floating Menu Icon */}
-        <TouchableOpacity 
-          style={styles.floatingButton}
-          onPress={() => setDrawerVisible(true)}
-        >
-          <Ionicons name="menu" size={30} color="#000" />
-        </TouchableOpacity>
+    <SQLiteProvider databaseName="spirits.db" onInit={migrateDbIfNeeded}>
+      <NavigationContainer>
+        <View style={{ flex: 1 }}>
+          {/* Floating Menu Icon */}
+          <TouchableOpacity 
+            style={styles.floatingButton}
+            onPress={() => setDrawerVisible(true)}
+          >
+            <Ionicons name="menu" size={30} color="#000" />
+          </TouchableOpacity>
 
-        <Stack.Navigator initialRouteName="About" screenOptions={{ headerShown: false }}>
-        {/* Dito ang malupit nating browser router xD */}
-          <Stack.Screen name="About" component={About} />
-          <Stack.Screen name="Login" component={Login} />
-          <Stack.Screen name="Adminhome" component={HomeScreen} />
+          <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="About" component={About} />
+            <Stack.Screen name="Login" component={Login} />
+            <Stack.Screen name="Adminhome" component={HomeScreen} />
+          </Stack.Navigator>
 
-
-        </Stack.Navigator>
-
-        {/* Drawer Overlay */}
-        {drawerVisible && (
-          <View style={styles.drawerOverlay}>
-            <AppDrawer 
-              closeDrawer={() => setDrawerVisible(false)}
-            />
-          </View>
-        )}
-      </View>
-    </NavigationContainer>
+          {/* Drawer Overlay */}
+          {drawerVisible && (
+            <View style={styles.drawerOverlay}>
+              <AppDrawer closeDrawer={() => setDrawerVisible(false)} />
+            </View>
+          )}
+        </View>
+      </NavigationContainer>
+    </SQLiteProvider>
   );
 };
 
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 0,
-    width: 240, // Expanded width
+    width: 240,
     height: '100%',
     backgroundColor: '#fff',
     zIndex: 20,
