@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "974909794033",
+    "project_id": "spirit-spirits-52611",
+    "storage_bucket": "spirit-spirits-52611.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:974909794033:android:3706021c11ce9acb00eb50",
+        "android_client_info": {
+          "package_name": "com.spiritspirits.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "974909794033-n9bbfn4bp16rc4q23getk6gnt6pbl9jh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.spiritspirits.app",
+            "certificate_hash": "fdf43828523fb6b9389779847cdecb05dfe181f9"
+          }
+        },
+        {
+          "client_id": "974909794033-6p3obqv1vudjg0tnq8mo1og1i13ld2sj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyACyz-hoE5Xy46ph66f5MwBXSjL6UEYFHM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "974909794033-6p3obqv1vudjg0tnq8mo1og1i13ld2sj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
