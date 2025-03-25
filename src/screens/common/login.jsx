@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import Constants from 'expo-constants';
 import { useDispatch } from 'react-redux';
 import { setUser } from '../../redux/reducers/loginReducer';
 import { storeUser } from '../../utils/storage';
 import { useSQLiteContext } from 'expo-sqlite';
+
+// 1. Import the libraries
+import auth from '@react-native-firebase/auth';
 import { GoogleSignin, GoogleSigninButton, isSuccessResponse } from '@react-native-google-signin/google-signin';
 
 const Login = () => {
@@ -14,9 +17,8 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const db = useSQLiteContext(); 
-
   const { extra: { BACKEND_URL } = {} } = Constants.expoConfig;
-  const apiURL = BACKEND_URL || 'http://localhost:5000';
+  const apiURL = BACKEND_URL || 'http://192.168.1.123:5000';
 
   // Handler for email/password login
   const handleLogin = async () => {
@@ -41,20 +43,33 @@ const Login = () => {
     }
   };
 
-  // Placeholder for Google sign-in
+  // Handler for Google sign-in using Firebase Auth
   const handleGoogleSignIn = async () => {
     try {
       setIsSubmitting(true);
-      await GoogleSignin.hasPlayServices();
-      const response = await GoogleSignin.signIn();
-      if(isSuccessResponse(response)) {
-        const { idToken, user } = response.data;
-        const { email, name, photo } = user;
 
-        console.log('Google sign-in success:', { email, name, photo });
-        // initiate Google sign in, then use handleGoogleLogin to send idToken to backend.
-        handleGoogleLogin(idToken);
+      // 1. Check if device has Google Play Services
+      await GoogleSignin.hasPlayServices();
+
+      // 2. Sign in to Google to get the Google ID token
+      const response = await GoogleSignin.signIn();
+      console.log('Google sign-in response:', response);
+
+      if (isSuccessResponse(response)) {
+        // Extract the Google ID token
+        const { idToken } = response.data;
+
+        // 3. Exchange the Google ID token for a Firebase credential
+        const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+        const userCredential = await auth().signInWithCredential(googleCredential);
+
+        // 4. Get the Firebase ID token
+        const firebaseIdToken = await userCredential.user.getIdToken();
+
+        // 5. Send the Firebase ID token to your backend
+        await handleGoogleLogin(firebaseIdToken);
       }
+
       setIsSubmitting(false);
     } catch (error) {
       setIsSubmitting(false);
@@ -63,13 +78,14 @@ const Login = () => {
     }
   };
 
-  // Handler for Google login: sends idToken to the backend and handles the response
-  const handleGoogleLogin = async (idToken) => {
+  // Handler for Google login: sends *Firebase* ID token to the backend
+  const handleGoogleLogin = async (firebaseIdToken) => {
     try {
       const res = await fetch(`${apiURL}/api/auth/googlelogin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
+        // Note: We are calling it "firebaseIdToken" to distinguish it
+        body: JSON.stringify({ firebaseIdToken }),
       });
       const data = await res.json();
       

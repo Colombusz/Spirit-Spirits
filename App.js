@@ -9,7 +9,7 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 export default function App() {
   useEffect(() => {
     GoogleSignin.configure({
-      webClientId: "1030795510253-e63qcl013pkeihpfak8k2uplahvjet0e.apps.googleusercontent.com",
+      webClientId: '974909794033-6p3obqv1vudjg0tnq8mo1og1i13ld2sj.apps.googleusercontent.com',
       profileImageSize: 150,
     });
   }, []);
