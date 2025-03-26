@@ -44,7 +44,7 @@
       "@react-native-google-signin/google-signin",
       {
         "googleServicesFile": "./google-services.json",
-        "iosUrlScheme": "com.spiritspirits.app"
+        "iosUrlScheme": "com.googleusercontent.apps.974909794033-6p26ghnf0n58jopi6dl7mc3nrd4k7n2u"
       }
       ],
       [
