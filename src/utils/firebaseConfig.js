@@ -1,13 +1,8 @@
-// Web Client
+// firebaseConfig.js
+import { initializeApp } from 'firebase/app';
+import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyCnnW2gV_jxNo7nSrJ1zzCfXvmp7r4nCq8",
   authDomain: "spirit-spirits-52611.firebaseapp.com",
@@ -18,19 +13,10 @@ const firebaseConfig = {
   measurementId: "G-SD4CPLVVH3"
 };
 
-// Initialize Firebase
+// Initialize Firebase app
 export const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
 
-
-// OLD / ABANDONED CODE
-// const firebaseConfig = {
-//   apiKey: "AIzaSyBTJ1NSvzQUUBd-2LkUgxJCsktiB2T2kiY",
-//   authDomain: "spirit-spirits.firebaseapp.com",
-//   projectId: "spirit-spirits",
-//   storageBucket: "spirit-spirits.firebasestorage.app",
-//   messagingSenderId: "977548520440",
-//   appId: "1:977548520440:web:51f1ef842c7554a09e440d",
-//   measurementId: "G-2M60LEJGJK"
-// };
+// Initialize Firebase Auth with React Native persistence
+export const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(AsyncStorage)
+});
