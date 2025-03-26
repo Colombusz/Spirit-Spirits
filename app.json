@@ -25,52 +25,36 @@
         "backgroundColor": "#ffffff"
       }
     },
-    "ios": {
-      "bundleIdentifier": "com.spiritspirits.app",
-      "googleServicesFile": "./GoogleService-Info.plist",
-      "supportsTablet": true,
-      "infoPlist": {
-        "UIBackgroundModes": [
-          "remote-notification"
-        ]
-      }
-    },
     "web": {
       "favicon": "./assets/ghost.png"
     },
     "plugins": [
       [
-      "@react-native-google-signin/google-signin",
-      {
-        "googleServicesFile": "./google-services.json",
-        "iosUrlScheme": "com.googleusercontent.apps.974909794033-6p26ghnf0n58jopi6dl7mc3nrd4k7n2u"
-      }
-      ],
-      [
-      "expo-dev-client",
-      {
-        "launchMode": "most-recent"
-      }
-      ],
-      
-      [
-      "expo-sqlite",
-      {
-        "enableFTS": true,
-        "useSQLCipher": true,
-        "android": {
-        "enableFTS": false,
-        "useSQLCipher": false
+        "@react-native-google-signin/google-signin",
+        {
+          "googleServicesFile": "./google-services.json"
         }
-      }
       ],
       [
-      "expo-build-properties",
-      {
-        "ios": {
-        "useFrameworks": "static"
+        "expo-dev-client",
+        {
+          "launchMode": "most-recent"
         }
-      }
+      ],
+      [
+        "expo-sqlite",
+        {
+          "enableFTS": true,
+          "useSQLCipher": true,
+          "android": {
+            "enableFTS": false,
+            "useSQLCipher": false
+          }
+        }
+      ],
+      [
+        "expo-build-properties",
+        {}
       ]
     ],
     "owner": "reimuhakurei"
