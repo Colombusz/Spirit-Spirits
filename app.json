@@ -31,7 +31,12 @@
     },
     "plugins": [
       "@react-native-google-signin/google-signin",
-      "@react-native-firebase/app",
+      [
+        "@react-native-firebase/app",
+        {
+          "googleServicesFile": "./google-services.json"
+        }
+      ],
       "@react-native-firebase/auth",
       [
         "expo-dev-client",
