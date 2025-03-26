@@ -72,8 +72,7 @@
         "useFrameworks": "static"
         }
       }
-      ],
-      "@react-native-async-storage/async-storage"
+      ]
     ],
     "owner": "reimuhakurei"
   }
