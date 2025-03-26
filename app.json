@@ -50,19 +50,7 @@
           }
         }
       ],
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "compileSdkVersion": 33,
-            "targetSdkVersion": 33,
-            "minSdkVersion": 21
-          },
-          "ios": {
-            "useFrameworks": "static"
-          }
-        }
-      ]
+      "expo-build-properties"
     ],
     "owner": "reimuhakurei"
   }
