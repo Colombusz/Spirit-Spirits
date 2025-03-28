@@ -5,6 +5,8 @@ import Navigator from './src/navigation/navigator';
 import store from './src/redux/store';
 import { Provider } from 'react-redux';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { AsyncSQLiteProvider } from './src/utils/asyncSQliteProvider';
+import { migrateDbIfNeeded } from './src/utils/storage';
 
 export default function App() {
   useEffect(() => {
@@ -17,7 +19,9 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <Provider store={store}>
-        <Navigator />
+        <AsyncSQLiteProvider databaseName="spirits.db" onInit={migrateDbIfNeeded}>
+          <Navigator />
+        </AsyncSQLiteProvider>
       </Provider>
     </SafeAreaProvider>
   );

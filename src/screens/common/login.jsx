@@ -1,27 +1,30 @@
-import React, { useState, useEffect, use } from 'react';
+// Login.jsx
+import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import Constants from 'expo-constants';
 import { useDispatch } from 'react-redux';
 import { setUser } from '../../redux/reducers/loginReducer';
 import { storeUser } from '../../utils/storage';
-import { useSQLiteContext } from 'expo-sqlite';
-
-// import auth from '@react-native-firebase/auth';
+import { useAsyncSQLiteContext } from '../../utils/asyncSQliteProvider';
 
 import { auth } from '../../utils/firebaseConfig';
 import { GoogleSignin, GoogleSigninButton, isSuccessResponse } from '@react-native-google-signin/google-signin';
+import { signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
 
 const Login = () => {
   const dispatch = useDispatch();
+  const db = useAsyncSQLiteContext(); // get async db instance
+
+  if (!db) {
+    console.warn("Database is not initialized yet.");
+  }
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const db = useSQLiteContext(); 
   const { extra: { BACKEND_URL } = {} } = Constants.expoConfig;
   const apiURL = BACKEND_URL || 'http://192.168.1.123:5000';
 
-  // Handler for email/password login
   const handleLogin = async () => {
     try {
       const res = await fetch(`${apiURL}/api/auth/login`, {
@@ -32,7 +35,7 @@ const Login = () => {
       const data = await res.json();
       
       if (data.success) {
-        storeUser(db, { ...data.user, token: data.token });
+        await storeUser(db, { ...data.user, token: data.token });
         dispatch(setUser(data.user));
         Alert.alert('Login Successful');
       } else {
@@ -44,7 +47,6 @@ const Login = () => {
     }
   };
 
-  // Handler for Google sign-in using Firebase Auth
   const handleGoogleSignIn = async () => {
     try {
       setIsSubmitting(true);
@@ -60,6 +62,8 @@ const Login = () => {
         const credential = GoogleAuthProvider.credential(idToken);
         const userCredential = await signInWithCredential(auth, credential);
 
+        console.log('userCredential:', userCredential);
+
         const firebaseIdToken = await userCredential.user.getIdToken();
         await handleGoogleLogin(firebaseIdToken);
       }
@@ -72,7 +76,6 @@ const Login = () => {
     }
   };
 
-  // Handler for Google login: sends *Firebase* ID token to the backend
   const handleGoogleLogin = async (firebaseIdToken) => {
     try {
       const res = await fetch(`${apiURL}/api/auth/googlelogin`, {
@@ -83,7 +86,7 @@ const Login = () => {
       const data = await res.json();
       
       if (data.success) {
-        storeUser(db, { ...data.user, token: data.token });
+        await storeUser(db, { ...data.user, token: data.token });
         dispatch(setUser(data.user));
         Alert.alert('Google Login Successful');
       } else {

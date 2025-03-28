@@ -1,16 +1,10 @@
+// storage.js
 import * as SQLite from 'expo-sqlite';
 
-// ---------- SQLite Initialization ----------
+// Initialize your database (using async methods)
 export async function migrateDbIfNeeded(dbInstance) {
-  const DATABASE_VERSION = 1;
-  // Get current version using the asynchronous API provided by SQLiteProvider
-  let { user_version: currentDbVersion } = await dbInstance.getFirstAsync('PRAGMA user_version');
-  
-  if (currentDbVersion >= DATABASE_VERSION) {
-    return;
-  }
-  
-  if (currentDbVersion === 0) {
+  try {
+    // execAsync runs the SQL without parameter binding.
     await dbInstance.execAsync(`
       PRAGMA journal_mode = 'wal';
       CREATE TABLE IF NOT EXISTS users (
@@ -29,25 +23,32 @@ export async function migrateDbIfNeeded(dbInstance) {
          FCMtoken TEXT
       );
     `);
-    // You can also insert default data if needed here.
+    console.log("Database initialized");
+  } catch (error) {
+    console.error("Error initializing database", error);
   }
-  
-  await dbInstance.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);
 }
 
-// ---------- User Storage Functions ----------
-// Save (or update) the logged-in user's details in the "users" table.
-// This function expects an object containing the parameters returned by your login controllers.
-export const storeUser = (dbInstance, userData) => {
-  dbInstance.transaction(tx => {
-    tx.executeSql('DELETE FROM users');
-    tx.executeSql(
-      `INSERT INTO users (
-         id, token, username, firstname, lastname, email, address, phone,
-         image_public_id, image_url, isVerified, isAdmin, FCMtoken
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        userData.id,
+export const storeUser = async (dbInstance, userData) => {
+  try {
+    console.log("Storing user:", userData);
+    const userId = userData._id || userData.id || userData.uid;
+    if (!userId) {
+      throw new Error("User ID is missing!");
+    }
+    
+    // Use withTransactionAsync to run queries within a transaction
+    await dbInstance.withTransactionAsync(async () => {
+      // Delete existing users
+      await dbInstance.runAsync('DELETE FROM users');
+      
+      // Insert the new user record using runAsync which supports parameter binding.
+      const result = await dbInstance.runAsync(
+        `INSERT INTO users (
+          id, token, username, firstname, lastname, email, address, phone,
+          image_public_id, image_url, isVerified, isAdmin, FCMtoken
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        userId,
         userData.token,
         userData.username,
         userData.firstname,
@@ -59,32 +60,30 @@ export const storeUser = (dbInstance, userData) => {
         userData.image?.url || null,
         userData.isVerified ? 1 : 0,
         userData.isAdmin ? 1 : 0,
-        userData.FCMtoken || null,
-      ]
-    );
-  });
+        userData.FCMtoken || null
+      );
+      console.log("User stored successfully", result);
+    });
+  } catch (error) {
+    console.error("Error storing user:", error);
+    throw error;
+  }
 };
 
-export const getUser = (dbInstance, callback) => {
-  dbInstance.transaction(tx => {
-    tx.executeSql(
-      'SELECT * FROM users LIMIT 1',
-      [],
-      (_, { rows }) => {
-        const user = rows._array.length > 0 ? rows._array[0] : null;
-        callback(user);
-      },
-      (_, error) => {
-        console.error("Error retrieving user:", error);
-        callback(null);
-        return false;
-      }
-    );
-  });
+export const getUser = async (dbInstance) => {
+  try {
+    const result = await dbInstance.getFirstAsync('SELECT * FROM users LIMIT 1');
+    return result; // result should be a single row object
+  } catch (error) {
+    console.error("Error retrieving user:", error);
+    return null;
+  }
 };
 
-export const deleteUser = (dbInstance) => {
-  dbInstance.transaction(tx => {
-    tx.executeSql('DELETE FROM users');
-  });
+export const deleteUser = async (dbInstance) => {
+  try {
+    await dbInstance.runAsync('DELETE FROM users');
+  } catch (error) {
+    console.error("Error deleting user:", error);
+  }
 };
