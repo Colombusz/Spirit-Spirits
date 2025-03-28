@@ -13,8 +13,11 @@ import {
   IconButton,
 } from 'react-native-paper';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from '@react-navigation/native';
 
-const AppDrawer = ({ closeDrawer, navigation }) => {
+const AppDrawer = ({ closeDrawer }) => {
+  const navigation = useNavigation();
+
   return (
     <DrawerContentScrollView>
       <View style={styles.drawerContent}>
@@ -70,10 +73,10 @@ const AppDrawer = ({ closeDrawer, navigation }) => {
           />
           <DrawerItem
             icon={({ color, size }) => (
-              <Ionicons name="chatbubble-outline" color={color} size={size} />
+              <Ionicons name="alert-circle-outline" color={color} size={size} />
             )}
-            label="Messages"
-            onPress={() => { navigation.navigate('Messages'); closeDrawer(); }}
+            label="About"
+            onPress={() => { navigation.navigate('About'); closeDrawer(); }}
           />
           <DrawerItem
             icon={({ color, size }) => (
@@ -88,6 +91,20 @@ const AppDrawer = ({ closeDrawer, navigation }) => {
             )}
             label="Payments"
             onPress={() => { navigation.navigate('Payments'); closeDrawer(); }}
+          />
+          <DrawerItem
+            icon={({ color, size }) => (
+              <Ionicons name="card-outline" color={color} size={size} />
+            )}
+            label="Login: Testing"
+            onPress={() => { navigation.navigate('Login'); closeDrawer(); }}
+          />
+          <DrawerItem
+            icon={({ color, size }) => (
+              <Ionicons name="card-outline" color={color} size={size} />
+            )}
+            label="Signup: Testing"
+            onPress={() => { navigation.navigate('Signup'); closeDrawer(); }}
           />
         </Drawer.Section>
       </View>

@@ -9,6 +9,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import HomeScreen from '../screens/admin/index';
 import Login from '../screens/common/login';
 import About from '../screens/common/about';
+import Signup from '../screens/common/signup';
 
 // Custom Drawer 
 import AppDrawer from '../components/common/appdrawer';
@@ -33,6 +34,7 @@ const Navigator = () => {
           <Stack.Screen name="About" component={About} />
           <Stack.Screen name="Login" component={Login} />
           <Stack.Screen name="Adminhome" component={HomeScreen} />
+          <Stack.Screen name="Signup" component={Signup} />
         </Stack.Navigator>
 
         {/* Drawer Overlay */}

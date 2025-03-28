@@ -13,7 +13,7 @@ import { signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
 
 const Login = () => {
   const dispatch = useDispatch();
-  const db = useAsyncSQLiteContext(); // get async db instance
+  const db = useAsyncSQLiteContext(); 
 
   if (!db) {
     console.warn("Database is not initialized yet.");
@@ -33,6 +33,7 @@ const Login = () => {
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
+      console.log('Login response:', data);
       
       if (data.success) {
         await storeUser(db, { ...data.user, token: data.token });
@@ -52,7 +53,7 @@ const Login = () => {
       setIsSubmitting(true);
       await GoogleSignin.hasPlayServices();
       const response = await GoogleSignin.signIn();
-      console.log('Google sign-in response:', response);
+      // console.log('Google sign-in response:', response);
 
       if (isSuccessResponse(response)) {
         const { idToken, user } = response.data;
@@ -62,7 +63,7 @@ const Login = () => {
         const credential = GoogleAuthProvider.credential(idToken);
         const userCredential = await signInWithCredential(auth, credential);
 
-        console.log('userCredential:', userCredential);
+        // console.log('userCredential:', userCredential);
 
         const firebaseIdToken = await userCredential.user.getIdToken();
         await handleGoogleLogin(firebaseIdToken);
@@ -117,8 +118,9 @@ const Login = () => {
       />
       <Button title="Login" onPress={handleLogin} />
       
-      <View style={{ marginVertical: 12 }}>
+      <View style={{ marginVertical: 12, width: '100%' }}>
         <GoogleSigninButton
+          style={{ width: '100%', height: 48 }} // Adjust height if needed
           size={GoogleSigninButton.Size.Wide}
           color={GoogleSigninButton.Color.Dark}
           onPress={handleGoogleSignIn}

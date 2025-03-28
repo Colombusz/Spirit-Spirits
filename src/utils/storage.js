@@ -33,6 +33,7 @@ export const storeUser = async (dbInstance, userData) => {
   try {
     console.log("Storing user:", userData);
     const userId = userData._id || userData.id || userData.uid;
+    
     if (!userId) {
       throw new Error("User ID is missing!");
     }
