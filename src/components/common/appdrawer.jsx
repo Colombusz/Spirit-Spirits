@@ -1,31 +1,23 @@
+// AppDrawer.jsx
 import React, { useState, useCallback } from 'react';
 import { View, StyleSheet } from 'react-native';
-import {
-  DrawerContentScrollView,
-  DrawerItem,
-} from '@react-navigation/drawer';
-import {
-  Avatar,
-  Title,
-  Caption,
-  Paragraph,
-  IconButton,
-} from 'react-native-paper';
+import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
+import { Avatar, Title, Caption, Paragraph, IconButton } from 'react-native-paper';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { getUser } from '../../utils/storage';
+import { getUserCredentials } from '../../utils/userStorage';
 
 const AppDrawer = ({ closeDrawer }) => {
   const navigation = useNavigation();
   const [user, setUser] = useState(null);
 
-  // Use useFocusEffect to refresh user data every time the drawer is focused
+  // Refresh user data every time the drawer is focused
   useFocusEffect(
     useCallback(() => {
       const fetchUser = async () => {
         try {
-          const userData = await getUser();
-          console.log('Retrieved user:', userData);
+          const userData = await getUserCredentials();
+          console.log('Retrieved user from AsyncStorage:', userData);
           setUser(userData);
         } catch (error) {
           console.error('Error fetching user:', error);

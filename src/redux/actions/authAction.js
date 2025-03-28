@@ -2,6 +2,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import Constants from 'expo-constants';
 import { storeToken, removeToken } from '../../utils/storage';
+import { removeUserCredentials, storeUserCredentials } from '../../utils/userStorage';
 
 const apiURL = Constants.expoConfig.extra?.BACKEND_URL || 'http://192.168.1.123:5000';
 
@@ -16,8 +17,10 @@ export const loginUser = createAsyncThunk(
       });
       const data = await res.json();
       if (data.success) {
-        // Pass the same db context from useAsyncSQLiteContext()
+        // save JWT on sqlite
         await storeToken(db, data.token);
+        await storeUserCredentials(data.user);
+        console.log('User credentials stored successfully:', data.user);
         return data.user;
       } else {
         return thunkAPI.rejectWithValue(data.message);
@@ -52,6 +55,7 @@ export const signupUser = createAsyncThunk('auth/signup',
 export const logoutUser = createAsyncThunk('auth/logout', async (_, thunkAPI) => {
   try {
     await removeToken();
+    await removeUserCredentials();
     return;
   } catch (error) {
     return thunkAPI.rejectWithValue(error.message);
@@ -72,6 +76,7 @@ export const googleLogin = createAsyncThunk(
       if (data.success) {
         // Store only the token locally 
         await storeToken(db, data.token);
+        await storeUserCredentials(data.user);
         console.log('Google login successful:', data.user);
         return data.user;
       } else {
