@@ -10,6 +10,7 @@ import HomeScreen from '../screens/admin/index';
 import Login from '../screens/common/login';
 import About from '../screens/common/about';
 import Signup from '../screens/common/signup';
+import Home from '../screens/common/home';
 
 // Custom Drawer 
 import AppDrawer from '../components/common/appdrawer';
@@ -30,11 +31,12 @@ const Navigator = () => {
           <Ionicons name="menu" size={30} color="#000" />
         </TouchableOpacity>
 
-        <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
+        <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
           <Stack.Screen name="About" component={About} />
           <Stack.Screen name="Login" component={Login} />
           <Stack.Screen name="Adminhome" component={HomeScreen} />
           <Stack.Screen name="Signup" component={Signup} />
+          <Stack.Screen name="Home" component={Home} />
         </Stack.Navigator>
 
         {/* Drawer Overlay */}

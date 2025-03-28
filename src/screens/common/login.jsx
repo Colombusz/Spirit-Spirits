@@ -1,51 +1,56 @@
 // Login.jsx
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  StyleSheet,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import Constants from 'expo-constants';
 import { useDispatch } from 'react-redux';
-import { setUser } from '../../redux/reducers/loginReducer';
-import { storeUser } from '../../utils/storage';
 import { useAsyncSQLiteContext } from '../../utils/asyncSQliteProvider';
+import { useNavigation } from '@react-navigation/native';
 
 import { auth } from '../../utils/firebaseConfig';
-import { GoogleSignin, GoogleSigninButton, isSuccessResponse } from '@react-native-google-signin/google-signin';
+import {
+  GoogleSignin,
+  GoogleSigninButton,
+  isSuccessResponse,
+} from '@react-native-google-signin/google-signin';
 import { signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
+
+// Import redux async thunks for login and google login
+import { loginUser, googleLogin } from '../../redux/actions/authAction';
 
 const Login = () => {
   const dispatch = useDispatch();
-  const db = useAsyncSQLiteContext(); 
+  const db = useAsyncSQLiteContext();
+  const navigation = useNavigation();
 
   if (!db) {
-    console.warn("Database is not initialized yet.");
+    console.warn('Database is not initialized yet.');
   }
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { extra: { BACKEND_URL } = {} } = Constants.expoConfig;
+  // apiURL is now only used for any non-redux logic
   const apiURL = BACKEND_URL || 'http://192.168.1.123:5000';
 
-  const handleLogin = async () => {
-    try {
-      const res = await fetch(`${apiURL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      console.log('Login response:', data);
-      
-      if (data.success) {
-        await storeUser(db, { ...data.user, token: data.token });
-        dispatch(setUser(data.user));
+  const handleLogin = () => {
+    dispatch(loginUser({ email, password, db }))
+      .unwrap()
+      .then((user) => {
         Alert.alert('Login Successful');
-      } else {
-        Alert.alert('Login Failed', data.message);
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      Alert.alert('Login error', error.message);
-    }
+        navigation.navigate('Home');
+      })
+      .catch((error) => {
+        Alert.alert('Login Failed', error);
+      });
   };
 
   const handleGoogleSignIn = async () => {
@@ -53,49 +58,29 @@ const Login = () => {
       setIsSubmitting(true);
       await GoogleSignin.hasPlayServices();
       const response = await GoogleSignin.signIn();
-      // console.log('Google sign-in response:', response);
 
       if (isSuccessResponse(response)) {
-        const { idToken, user } = response.data;
-        const { email, name, photo } = user;
-        console.log('Google sign-in success:', { email, name, photo });
-        
+        const { idToken } = response.data;
         const credential = GoogleAuthProvider.credential(idToken);
         const userCredential = await signInWithCredential(auth, credential);
-
-        // console.log('userCredential:', userCredential);
-
         const firebaseIdToken = await userCredential.user.getIdToken();
-        await handleGoogleLogin(firebaseIdToken);
-      }
 
+        // Dispatch the googleLogin thunk passing the firebase token and database context.
+        dispatch(googleLogin({ firebaseIdToken, db }))
+          .unwrap()
+          .then(() => {
+            Alert.alert('Google Login Successful');
+            navigation.navigate('Home');
+          })
+        .catch((error) => {
+          Alert.alert('Google Login Failed', error);
+        });
+      }
       setIsSubmitting(false);
     } catch (error) {
       setIsSubmitting(false);
       console.error('Google sign-in error:', error);
       Alert.alert('Google sign-in error', error.message);
-    }
-  };
-
-  const handleGoogleLogin = async (firebaseIdToken) => {
-    try {
-      const res = await fetch(`${apiURL}/api/auth/googlelogin`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firebaseIdToken }),
-      });
-      const data = await res.json();
-      
-      if (data.success) {
-        await storeUser(db, { ...data.user, token: data.token });
-        dispatch(setUser(data.user));
-        Alert.alert('Google Login Successful');
-      } else {
-        Alert.alert('Google Login Failed', data.message);
-      }
-    } catch (error) {
-      console.error('Google login error:', error);
-      Alert.alert('Google login error', error.message);
     }
   };
 
@@ -117,16 +102,18 @@ const Login = () => {
         secureTextEntry
       />
       <Button title="Login" onPress={handleLogin} />
-      
+
       <View style={{ marginVertical: 12, width: '100%' }}>
         <GoogleSigninButton
-          style={{ width: '100%', height: 48 }} // Adjust height if needed
+          style={{ width: '100%', height: 48 }}
           size={GoogleSigninButton.Size.Wide}
           color={GoogleSigninButton.Color.Dark}
           onPress={handleGoogleSignIn}
           disabled={isSubmitting}
         />
-        {isSubmitting && <ActivityIndicator size="small" color="black" style={{ marginTop: 8 }} />}
+        {isSubmitting && (
+          <ActivityIndicator size="small" color="black" style={{ marginTop: 8 }} />
+        )}
       </View>
     </View>
   );

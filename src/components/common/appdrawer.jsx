@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, StyleSheet } from 'react-native';
 import {
   DrawerContentScrollView,
@@ -9,14 +9,32 @@ import {
   Title,
   Caption,
   Paragraph,
-  Drawer,
   IconButton,
 } from 'react-native-paper';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { getUser } from '../../utils/storage';
 
 const AppDrawer = ({ closeDrawer }) => {
   const navigation = useNavigation();
+  const [user, setUser] = useState(null);
+
+  // Use useFocusEffect to refresh user data every time the drawer is focused
+  useFocusEffect(
+    useCallback(() => {
+      const fetchUser = async () => {
+        try {
+          const userData = await getUser();
+          console.log('Retrieved user:', userData);
+          setUser(userData);
+        } catch (error) {
+          console.error('Error fetching user:', error);
+        }
+      };
+
+      fetchUser();
+    }, [])
+  );
 
   return (
     <DrawerContentScrollView>
@@ -33,80 +51,108 @@ const AppDrawer = ({ closeDrawer }) => {
           <View style={{ flexDirection: 'row', marginTop: 15 }}>
             <Avatar.Image
               source={{
-                uri: 'https://cdn.donmai.us/sample/72/74/__hakurei_reimu_touhou_drawn_by_torajirou_toraneko_zirou__sample-72741d7d20b43596a12d296a599e96a3.jpg',
+                uri: user?.image_url || 'https://via.placeholder.com/150',
               }}
               size={70}
             />
             <View style={{ marginLeft: 15, flexDirection: 'column' }}>
-              <Title style={styles.title}>John Doe</Title>
-              <Caption style={styles.caption}>@j_doe</Caption>
+              <Title style={styles.title}>{user?.firstname || 'Guest'}</Title>
+              <Caption style={styles.caption}>
+                @{user?.username || 'guest_user'}
+              </Caption>
             </View>
           </View>
 
           <View style={styles.row}>
             <View style={styles.section}>
-              <Paragraph style={[styles.paragraph, styles.caption]}>80</Paragraph>
+              <Paragraph style={[styles.paragraph, styles.caption]}>
+                80
+              </Paragraph>
               <Caption style={styles.caption}>Following</Caption>
             </View>
             <View style={styles.section}>
-              <Paragraph style={[styles.paragraph, styles.caption]}>100</Paragraph>
+              <Paragraph style={[styles.paragraph, styles.caption]}>
+                100
+              </Paragraph>
               <Caption style={styles.caption}>Followers</Caption>
             </View>
           </View>
         </View>
 
         {/* NAVIGATION ITEMS */}
-        <Drawer.Section style={styles.drawerSection}>
+        <View style={styles.drawerSection}>
           <DrawerItem
             icon={({ color, size }) => (
               <Ionicons name="home" color={color} size={size} />
             )}
             label="Home"
-            onPress={() => { navigation.navigate('Home'); closeDrawer(); }}
+            onPress={() => {
+              navigation.navigate('Adminhome');
+              closeDrawer();
+            }}
           />
           <DrawerItem
             icon={({ color, size }) => (
               <Ionicons name="person-outline" color={color} size={size} />
             )}
             label="Profile"
-            onPress={() => { navigation.navigate('Profile'); closeDrawer(); }}
+            onPress={() => {
+              navigation.navigate('Profile');
+              closeDrawer();
+            }}
           />
           <DrawerItem
             icon={({ color, size }) => (
               <Ionicons name="alert-circle-outline" color={color} size={size} />
             )}
             label="About"
-            onPress={() => { navigation.navigate('About'); closeDrawer(); }}
+            onPress={() => {
+              navigation.navigate('About');
+              closeDrawer();
+            }}
           />
           <DrawerItem
             icon={({ color, size }) => (
               <Ionicons name="list-outline" color={color} size={size} />
             )}
             label="More"
-            onPress={() => { navigation.navigate('More'); closeDrawer(); }}
+            onPress={() => {
+              navigation.navigate('More');
+              closeDrawer();
+            }}
           />
           <DrawerItem
             icon={({ color, size }) => (
               <Ionicons name="card-outline" color={color} size={size} />
             )}
             label="Payments"
-            onPress={() => { navigation.navigate('Payments'); closeDrawer(); }}
+            onPress={() => {
+              navigation.navigate('Payments');
+              closeDrawer();
+            }}
+          />
+          {/* Additional items for testing */}
+          <DrawerItem
+            icon={({ color, size }) => (
+              <Ionicons name="card-outline" color={color} size={size} />
+            )}
+            label="Login: testing"
+            onPress={() => {
+              navigation.navigate('Login');
+              closeDrawer();
+            }}
           />
           <DrawerItem
             icon={({ color, size }) => (
               <Ionicons name="card-outline" color={color} size={size} />
             )}
-            label="Login: Testing"
-            onPress={() => { navigation.navigate('Login'); closeDrawer(); }}
+            label="Signup: testing"
+            onPress={() => {
+              navigation.navigate('Signup');
+              closeDrawer();
+            }}
           />
-          <DrawerItem
-            icon={({ color, size }) => (
-              <Ionicons name="card-outline" color={color} size={size} />
-            )}
-            label="Signup: Testing"
-            onPress={() => { navigation.navigate('Signup'); closeDrawer(); }}
-          />
-        </Drawer.Section>
+        </View>
       </View>
     </DrawerContentScrollView>
   );

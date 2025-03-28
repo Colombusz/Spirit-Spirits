@@ -1,10 +1,18 @@
+// Signup.jsx
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import Constants from 'expo-constants';
 
+// Import the signupUser thunk from Redux actions
+import { signupUser } from '../../redux/actions/authAction';
+
 const Signup = () => {
+  const dispatch = useDispatch();
   const navigation = useNavigation();
+
+  // remains here if needed.
   const { extra: { BACKEND_URL } = {} } = Constants.expoConfig;
   const apiURL = BACKEND_URL || 'http://192.168.1.123:5000';
 
@@ -15,36 +23,25 @@ const Signup = () => {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSignup = async () => {
+  const handleSignup = () => {
     if (!username || !firstname || !lastname || !email || !password) {
       Alert.alert('Error', 'All fields are required');
       return;
     }
 
-    try {
-      setIsSubmitting(true);
-
-      const response = await fetch(`${apiURL}/api/auth/signup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, firstname, lastname, email, password }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
+    setIsSubmitting(true);
+    dispatch(signupUser({ username, firstname, lastname, email, password }))
+      .unwrap()
+      .then((user) => {
         Alert.alert('Success', 'User created successfully. You may now login.');
-        // Alert.alert('Success', 'User created successfully. Please verify your email.');
         navigation.navigate('Login');
-      } else {
-        Alert.alert('Error', data.message);
-      }
-    } catch (error) {
-      console.error('Signup error:', error);
-      Alert.alert('Error', 'Something went wrong. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
+      })
+      .catch((error) => {
+        Alert.alert('Error', error);
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+      });
   };
 
   return (

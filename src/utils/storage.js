@@ -1,90 +1,95 @@
 // storage.js
 import * as SQLite from 'expo-sqlite';
 
-// Initialize your database (using async methods)
+/**
+ * This migration function creates the necessary tables.
+ * It is called by the AsyncSQLiteProvider's onInit prop.
+ */
 export async function migrateDbIfNeeded(dbInstance) {
   try {
-    // execAsync runs the SQL without parameter binding.
+    // Create the users table (if needed)
     await dbInstance.execAsync(`
-      PRAGMA journal_mode = 'wal';
       CREATE TABLE IF NOT EXISTS users (
-         id TEXT PRIMARY KEY NOT NULL,
-         token TEXT,
-         username TEXT,
-         firstname TEXT,
-         lastname TEXT,
-         email TEXT,
-         address TEXT,
-         phone TEXT,
-         image_public_id TEXT,
-         image_url TEXT,
-         isVerified INTEGER,
-         isAdmin INTEGER,
-         FCMtoken TEXT
+        id TEXT PRIMARY KEY NOT NULL,
+        token TEXT
+        -- other columns if needed
       );
     `);
-    console.log("Database initialized");
+
+    // Create the token table
+    await dbInstance.execAsync(`
+      CREATE TABLE IF NOT EXISTS tokenTable (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        token TEXT
+      );
+    `);
+
+    console.log("Database migrated or initialized successfully");
   } catch (error) {
     console.error("Error initializing database", error);
   }
 }
 
-export const storeUser = async (dbInstance, userData) => {
+/**
+ * Stores a token in the tokenTable.
+ * @param {Object} dbInstance - The SQLite database instance.
+ * @param {string} token - The token to store.
+ */
+export const storeToken = async (dbInstance, token) => {
+  if (!dbInstance) {
+    console.error("No dbInstance provided to storeToken");
+    return;
+  }
   try {
-    console.log("Storing user:", userData);
-    const userId = userData._id || userData.id || userData.uid;
-    
-    if (!userId) {
-      throw new Error("User ID is missing!");
-    }
-    
-    // Use withTransactionAsync to run queries within a transaction
+    // Wrap in a transaction so that runAsync is available
     await dbInstance.withTransactionAsync(async () => {
-      // Delete existing users
-      await dbInstance.runAsync('DELETE FROM users');
-      
-      // Insert the new user record using runAsync which supports parameter binding.
-      const result = await dbInstance.runAsync(
-        `INSERT INTO users (
-          id, token, username, firstname, lastname, email, address, phone,
-          image_public_id, image_url, isVerified, isAdmin, FCMtoken
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        userId,
-        userData.token,
-        userData.username,
-        userData.firstname,
-        userData.lastname,
-        userData.email,
-        userData.address || null,
-        userData.phone || null,
-        userData.image?.public_id || null,
-        userData.image?.url || null,
-        userData.isVerified ? 1 : 0,
-        userData.isAdmin ? 1 : 0,
-        userData.FCMtoken || null
-      );
-      console.log("User stored successfully", result);
+      await dbInstance.runAsync("INSERT INTO tokenTable (token) VALUES (?);", token);
     });
+    console.log("Token stored successfully");
   } catch (error) {
-    console.error("Error storing user:", error);
+    console.error("Error storing token", error);
     throw error;
   }
 };
 
-export const getUser = async (dbInstance) => {
+/**
+ * Retrieves the most recently stored token.
+ * @param {Object} dbInstance - The SQLite database instance.
+ * @returns {string|null} - The stored token or null if none exists.
+ */
+export const getToken = async (dbInstance) => {
+  if (!dbInstance) {
+    console.error("No dbInstance provided to getToken");
+    return null;
+  }
   try {
-    const result = await dbInstance.getFirstAsync('SELECT * FROM users LIMIT 1');
-    return result; // result should be a single row object
+    const result = await dbInstance.getFirstAsync(
+      "SELECT token FROM tokenTable ORDER BY id DESC LIMIT 1;"
+    );
+    return result ? result.token : null;
   } catch (error) {
-    console.error("Error retrieving user:", error);
+    console.error("Error retrieving token", error);
     return null;
   }
 };
 
-export const deleteUser = async (dbInstance) => {
+/**
+ * Removes all tokens from the tokenTable.
+ * @param {Object} dbInstance - The SQLite database instance.
+ */
+export const removeToken = async (dbInstance) => {
+  if (!dbInstance) {
+    console.error("No dbInstance provided to removeToken");
+    return;
+  }
   try {
-    await dbInstance.runAsync('DELETE FROM users');
+    // Wrap in a transaction so that runAsync is available
+    await dbInstance.withTransactionAsync(async () => {
+      await dbInstance.runAsync("DELETE FROM tokenTable;");
+    });
+    console.log("Token removed successfully");
   } catch (error) {
-    console.error("Error deleting user:", error);
+    console.error("Error removing token", error);
+    throw error;
   }
 };
