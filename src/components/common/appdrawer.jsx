@@ -79,7 +79,7 @@ const AppDrawer = ({ closeDrawer }) => {
             )}
             label="Home"
             onPress={() => {
-              navigation.navigate('Adminhome');
+              navigation.navigate('Home');
               closeDrawer();
             }}
           />
@@ -87,9 +87,9 @@ const AppDrawer = ({ closeDrawer }) => {
             icon={({ color, size }) => (
               <Ionicons name="person-outline" color={color} size={size} />
             )}
-            label="Profile"
+            label="Account"
             onPress={() => {
-              navigation.navigate('Profile');
+              navigation.navigate('Account');
               closeDrawer();
             }}
           />

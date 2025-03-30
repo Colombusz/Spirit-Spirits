@@ -52,15 +52,19 @@ export const signupUser = createAsyncThunk('auth/signup',
   }
 );
 
-export const logoutUser = createAsyncThunk('auth/logout', async (_, thunkAPI) => {
-  try {
-    await removeToken();
-    await removeUserCredentials();
-    return;
-  } catch (error) {
-    return thunkAPI.rejectWithValue(error.message);
+export const logoutUser = createAsyncThunk(
+  'auth/logout',
+  async (db, thunkAPI) => {
+    try {
+      await removeToken(db);
+      await removeUserCredentials();
+      console.log('User logged out successfully');
+      return;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.message);
+    }
   }
-});
+);
 
 // New thunk for Google Login using token storage
 export const googleLogin = createAsyncThunk(

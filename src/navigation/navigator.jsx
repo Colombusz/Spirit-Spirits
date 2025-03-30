@@ -11,6 +11,7 @@ import Login from '../screens/common/login';
 import About from '../screens/common/about';
 import Signup from '../screens/common/signup';
 import Home from '../screens/common/home';
+import Account from '../screens/user/account';
 
 // Custom Drawer 
 import AppDrawer from '../components/common/appdrawer';
@@ -37,6 +38,7 @@ const Navigator = () => {
           <Stack.Screen name="Adminhome" component={HomeScreen} />
           <Stack.Screen name="Signup" component={Signup} />
           <Stack.Screen name="Home" component={Home} />
+          <Stack.Screen name="Account" component={Account} />
         </Stack.Navigator>
 
         {/* Drawer Overlay */}

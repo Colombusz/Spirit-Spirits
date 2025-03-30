@@ -1,10 +1,6 @@
 // storage.js
 import * as SQLite from 'expo-sqlite';
 
-/**
- * This migration function creates the necessary tables.
- * It is called by the AsyncSQLiteProvider's onInit prop.
- */
 export async function migrateDbIfNeeded(dbInstance) {
   try {
     // Create the users table with token
@@ -32,11 +28,6 @@ export async function migrateDbIfNeeded(dbInstance) {
   }
 }
 
-/**
- * Stores a token in the users table.
- * @param {Object} dbInstance - The SQLite database instance.
- * @param {string} token - The token to store.
- */
 export const storeToken = async (dbInstance, token) => {
   if (!dbInstance) {
     console.error("No dbInstance provided to users");
@@ -55,11 +46,6 @@ export const storeToken = async (dbInstance, token) => {
   }
 };
 
-/**
- * Retrieves the most recently stored token.
- * @param {Object} dbInstance - The SQLite database instance.
- * @returns {string|null} - The stored token or null if none exists.
- */
 export const getToken = async (dbInstance) => {
   if (!dbInstance) {
     console.error("No dbInstance provided to getToken");
@@ -69,6 +55,7 @@ export const getToken = async (dbInstance) => {
     const result = await dbInstance.getFirstAsync(
       "SELECT token FROM users ORDER BY id DESC LIMIT 1;"
     );
+    console.log("Retrieved token:", result.token);
     return result ? result.token : null;
   } catch (error) {
     console.error("Error retrieving token", error);
@@ -76,17 +63,12 @@ export const getToken = async (dbInstance) => {
   }
 };
 
-/**
- * Removes all tokens from the users table.
- * @param {Object} dbInstance - The SQLite database instance.
- */
 export const removeToken = async (dbInstance) => {
   if (!dbInstance) {
     console.error("No dbInstance provided to removeToken");
     return;
   }
   try {
-    // Wrap in a transaction so that runAsync is available
     await dbInstance.withTransactionAsync(async () => {
       await dbInstance.runAsync("DELETE FROM users;");
     });
