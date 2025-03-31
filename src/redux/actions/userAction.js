@@ -9,7 +9,8 @@ export const fetchCurrentUser = createAsyncThunk(
   'user/fetchCurrentUser',
   async (_, thunkAPI) => {
     try {
-        // sa AsyncStorage lang ako nagfetch, sa update user na lang magfetch sa backend
+        // sa AsyncStorage lang ako nagfetch, sa update user na lang magfetch sa backend tapos update sa local storage
+        // sa sqlite lang ung tokens, user credentials sa async storage
         const userCredentials = await getUserCredentials();
         if (!userCredentials) {
             return thunkAPI.rejectWithValue('No user credentials found');
@@ -22,3 +23,5 @@ export const fetchCurrentUser = createAsyncThunk(
     }
   }
 );
+
+

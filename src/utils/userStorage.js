@@ -16,8 +16,8 @@ export const storeUserCredentials = async (user) => {
 export const getUserCredentials = async () => {
   try {
     const data = await AsyncStorage.getItem('user');
-    return data ? JSON.parse(data) : null;
     console.log('User credentials retrieved successfully (AsyncStorage):', data);
+    return data ? JSON.parse(data) : null;
   } catch (error) {
     console.error('Error retrieving user credentials:', error);
     return null;

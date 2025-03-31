@@ -28,12 +28,12 @@ export const colors = {
     bronzeShade10: '#140d05',
   
     // Ivory variations (from warm cream to pure ivory)
-    ivory1: '#f5eccf',
-    ivory2: '#f6eed4',
-    ivory3: '#f7f0d9',
+    ivory1: '#fffff0',
+    ivory2: '#f5eccf',
+    ivory3: '#f6eed4',
     ivory4: '#f8f2dd',
-    ivory5: '#f9f4e2',
-    ivory6: '#fffff0',
+    ivory5: '#f7f0d9',
+    ivory6: '#f9f4e2',
   };
   
   export const spacing = {

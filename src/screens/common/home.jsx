@@ -4,7 +4,7 @@ import { View, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
 import { Card, Title, Paragraph } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchLiquors } from '../../redux/actions/liquorAction';
+import { fetchLiquors, fetchLiquorById } from '../../redux/actions/liquorAction';
 import { useAsyncSQLiteContext } from '../../utils/asyncSQliteProvider';
 import { colors, spacing, globalStyles } from '../../components/common/theme';
 
@@ -27,13 +27,12 @@ const Home = () => {
       <Card
         style={styles.card}
         onPress={() =>
-          navigation.navigate('LiquorDetail', { liquorId: item._id })
+          navigation.navigate('Details', { liquorId: item._id })
         }
       >
         <Card.Cover source={{ uri: imageUrl }} style={styles.cardCover} />
         <Card.Content>
           <Title style={styles.cardTitle}>{item.name}</Title>
-          <Paragraph style={styles.cardSubtitle}>{item.brand}</Paragraph>
           <Paragraph style={styles.price}>${item.price}</Paragraph>
         </Card.Content>
       </Card>
@@ -98,7 +97,7 @@ const styles = StyleSheet.create({
   },
   cardCover: {
     // Optionally adjust height
-    height: 120,
+    height: 170,
   },
   cardTitle: {
     fontSize: 18,

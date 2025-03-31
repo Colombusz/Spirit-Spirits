@@ -22,3 +22,26 @@ export const fetchLiquors = createAsyncThunk(
     }
   }
 );
+
+export const fetchLiquorById = createAsyncThunk(
+  'liquor/fetchLiquorById',
+  async (liquorId, thunkAPI) => {
+    try {
+      const response = await fetch(`${apiURL}/api/liquors/${liquorId}`, {
+        method: 'GET',
+      });
+      const data = await response.json();
+      console.log('Fetched liquor by ID:', data);
+      if (data.success) {
+        return data;
+      } else {
+        return thunkAPI.rejectWithValue(data.message);
+      }
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.message);
+    }
+  }
+);
+
+export const clearCurrentLiquor = () => ({ type: 'liquor/clearCurrentLiquor' });
+
