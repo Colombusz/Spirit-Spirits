@@ -60,10 +60,10 @@ export default Navigator;
 const styles = StyleSheet.create({
   floatingButton: {
     position: 'absolute',
-    top: 40,
+    top: 20,
     left: 20,
     zIndex: 10,
-    backgroundColor: 'white',
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
     padding: 5,
     borderRadius: 20,
     elevation: 5,
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     left: 0,
     width: 240,
     height: '100%',
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     zIndex: 20,
     elevation: 10,
   },

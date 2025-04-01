@@ -10,20 +10,25 @@ import {
 import { Title, Paragraph, Button } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import {
-  fetchLiquorById,
-  clearCurrentLiquor,
-} from '../../redux/actions/liquorAction';
+import { fetchLiquorById, clearCurrentLiquor } from '../../redux/actions/liquorAction';
+import { addToCart } from '../../redux/actions/cartAction';
+import { getUserCredentials } from '../../utils/userStorage';
+import { useAsyncSQLiteContext } from '../../utils/asyncSQliteProvider';
 import { colors, spacing, globalStyles } from '../../components/common/theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Toasthelper } from '../../components/common/toasthelper';
 
 const Details = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const route = useRoute();
   const { liquorId } = route.params;
+  const db = useAsyncSQLiteContext();
 
   const { currentLiquor, loading, error } = useSelector((state) => state.liquor);
+  const handlepress = () => {
+    Toasthelper.showSuccess('Added to cart successfully!');
+  };
 
   useEffect(() => {
     dispatch(fetchLiquorById(liquorId));
@@ -31,6 +36,25 @@ const Details = () => {
       dispatch(clearCurrentLiquor());
     };
   }, [dispatch, liquorId]);
+
+  const handleAddToCart = async () => {
+    try {
+      const user = await getUserCredentials();
+      if (!user) {
+        console.error('User not found in AsyncStorage');
+        return;
+      }
+      const userId = user._id;
+      console.log('User ID:', userId);
+
+      // Dispatch addToCart action with db instance, userId, and liquor details
+      dispatch(addToCart({ db, userId, liquor: currentLiquor }));
+      handlepress();
+    } catch (error) {
+      console.error('Error adding to cart', error);
+    }
+  };
+  
 
   if (loading || !currentLiquor) {
     return <ActivityIndicator size="large" style={styles.loader} />;
@@ -53,83 +77,78 @@ const Details = () => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }}>
-    <View style={styles.rootContainer}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Horizontal ScrollView for images */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.imageScrollContent}
-          style={styles.imageScroll}
-        >
-          {currentLiquor.images &&
-            currentLiquor.images.map((img, index) => (
-              <Image
-                key={index.toString()}
-                source={{ uri: img.url }}
-                style={styles.imageItem}
-              />
-            ))}
+      <View style={styles.rootContainer}>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {/* Horizontal ScrollView for images */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.imageScrollContent}
+            style={styles.imageScroll}
+          >
+            {currentLiquor.images &&
+              currentLiquor.images.map((img, index) => (
+                <Image
+                  key={index.toString()}
+                  source={{ uri: img.url }}
+                  style={styles.imageItem}
+                />
+              ))}
+          </ScrollView>
+
+          {/* Promotional Info */}
+          <Paragraph style={styles.infoText}>
+            100% Authentic • Guaranteed 3-Day Shipping • No Damages • Legitimate Seller • Fast Shipping
+          </Paragraph>
+
+          {/* Product Name and Price */}
+          <Paragraph style={styles.price}>${currentLiquor.price}</Paragraph>
+          <Title style={styles.productName}>{currentLiquor.name}</Title>
+
+          {/* Additional Details */}
+          <Paragraph style={styles.detailText}>
+            <Paragraph style={styles.detailLabel}>Brand:</Paragraph> {currentLiquor.brand}
+          </Paragraph>
+          <Paragraph style={styles.detailText}>
+            <Paragraph style={styles.detailLabel}>Category:</Paragraph> {currentLiquor.category}
+          </Paragraph>
+          <Paragraph style={styles.detailText}>
+            <Paragraph style={styles.detailLabel}>Description:</Paragraph> {currentLiquor.description}
+          </Paragraph>
+
+          {/* Ratings & Reviews Section */}
+          <Title style={styles.sectionHeader}>Ratings & Reviews</Title>
+          <Paragraph style={styles.reviewText}>
+            Average Rating: {currentLiquor.rating || 0} ★ ({currentLiquor.numReviews || 0} Reviews)
+          </Paragraph>
         </ScrollView>
 
-        {/* Promotional Info */}
-        <Paragraph style={styles.infoText}>
-          100% Authentic • Guaranteed 3-Day Shipping • No Damages • Legitimate Seller • Fast Shipping 
-        </Paragraph>
-
-        {/* Product Name and Price */}
-        <Paragraph style={styles.price}>${currentLiquor.price}</Paragraph>
-        <Title style={styles.productName}>{currentLiquor.name}</Title>
-        
-        
-        {/* Additional Details */}
-        <Paragraph style={styles.detailText}>
-          <Paragraph style={styles.detailLabel}>Brand:</Paragraph> {currentLiquor.brand}
-        </Paragraph>
-        <Paragraph style={styles.detailText}>
-          <Paragraph style={styles.detailLabel}>Category:</Paragraph> {currentLiquor.category}
-        </Paragraph>
-        <Paragraph style={styles.detailText}>
-          <Paragraph style={styles.detailLabel}>Description:</Paragraph> {currentLiquor.description}
-        </Paragraph>
-        
-        
-        {/* Ratings & Reviews Section */}
-        <Title style={styles.sectionHeader}>Ratings & Reviews</Title>
-        <Paragraph style={styles.reviewText}>
-          Average Rating: {currentLiquor.rating || 0} ★ ({currentLiquor.numReviews || 0} Reviews)
-        </Paragraph>
-        <Paragraph style={styles.reviewText}>
-          
-        </Paragraph>
-      </ScrollView>
-
-      {/* Sticky Footer with flatter, shorter, but wider buttons */}
-      <View style={styles.stickyFooter}>
-        <Button
-          mode="contained"
-          icon="cart-plus" // Icon for Add to Cart
-          buttonColor={colors.primary}
-          contentStyle={styles.footerContent}
-          labelStyle={styles.footerLabel}
-          style={styles.footerButton}
-          onPress={() => console.log('Add to Cart pressed')}
-        >
-          Add to Cart
-        </Button>
-        <Button
-          mode="contained"
-          icon="cart-outline" // Icon for View Cart
-          buttonColor={colors.secondary}
-          contentStyle={styles.footerContent}
-          labelStyle={styles.footerLabel}
-          style={styles.footerButton}
-          onPress={() => console.log('View Cart pressed')}
-        >
-          View Cart
-        </Button>
+        {/* Sticky Footer with buttons */}
+        <View style={styles.stickyFooter}>
+          <Button
+            mode="contained"
+            icon="cart-plus"
+            buttonColor={colors.primary}
+            contentStyle={styles.footerContent}
+            labelStyle={styles.footerLabel}
+            style={styles.footerButton}
+            onPress={handleAddToCart}  // <-- Updated handler here
+          >
+            Add to Cart
+          </Button>
+          <Button
+            mode="contained"
+            icon="cart-outline"
+            buttonColor={colors.secondary}
+            contentStyle={styles.footerContent}
+            labelStyle={styles.footerLabel}
+            style={styles.footerButton}
+            onPress={() => console.log('View Cart pressed')}
+          >
+            View Cart
+          </Button>
+        </View>
       </View>
-    </View>
     </SafeAreaView>
   );
 };

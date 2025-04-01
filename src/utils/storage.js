@@ -15,6 +15,7 @@ export async function migrateDbIfNeeded(dbInstance) {
     await dbInstance.execAsync(`
       CREATE TABLE IF NOT EXISTS cart (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
         productId TEXT NOT NULL,
         name TEXT NOT NULL,
         quantity INTEGER NOT NULL,
@@ -97,5 +98,29 @@ export const logTableContents = async (dbInstance, tableName) => {
       }
     );
   });
+};
+
+export const addCartItem = async (dbInstance, cartItem) => {
+  if (!dbInstance) {
+    throw new Error("No dbInstance provided");
+  }
+  try {
+    await dbInstance.withTransactionAsync(async () => {
+      await dbInstance.runAsync(
+        "INSERT INTO cart (user_id, productId, name, quantity, price) VALUES (?, ?, ?, ?, ?);",
+        [
+          cartItem.user_id,
+          cartItem.productId,
+          cartItem.name,
+          cartItem.quantity,
+          cartItem.price,
+        ]
+      );
+    });
+    console.log("Cart item stored successfully");
+  } catch (error) {
+    console.error("Error storing cart item", error);
+    throw error;
+  }
 };
 

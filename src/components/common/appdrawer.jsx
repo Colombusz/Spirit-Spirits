@@ -18,6 +18,7 @@ const AppDrawer = ({ closeDrawer }) => {
         try {
           const userData = await getUserCredentials();
           console.log('Retrieved user from AsyncStorage:', userData);
+          // console.log('User data:', userData._id);
           setUser(userData);
         } catch (error) {
           console.error('Error fetching user:', error);
