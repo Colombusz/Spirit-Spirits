@@ -13,6 +13,7 @@ import Signup from '../screens/common/signup';
 import Home from '../screens/common/home';
 import Account from '../screens/user/account';
 import Details from '../screens/product/details';
+import Cart from '../screens/product/cart';
 
 // Custom Drawer 
 import AppDrawer from '../components/common/appdrawer';
@@ -41,6 +42,7 @@ const Navigator = () => {
           <Stack.Screen name="Home" component={Home} />
           <Stack.Screen name="Account" component={Account} />
           <Stack.Screen name="Details" component={Details} />
+          <Stack.Screen name="Cart" component={Cart} />
 
         </Stack.Navigator>
 

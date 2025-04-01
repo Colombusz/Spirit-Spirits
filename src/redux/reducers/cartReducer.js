@@ -1,6 +1,6 @@
 // redux/reducers/cartReducer.js
 import { createSlice } from '@reduxjs/toolkit';
-import { addToCart } from '../actions/cartAction';
+import { addToCart, fetchCartItems } from '../actions/cartAction';
 
 const initialState = {
   items: [],
@@ -33,6 +33,20 @@ const cartSlice = createSlice({
         });
       })
       .addCase(addToCart.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Extra reducers for fetching the cart
+      .addCase(fetchCartItems.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchCartItems.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = action.payload;
+      })
+      .addCase(fetchCartItems.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

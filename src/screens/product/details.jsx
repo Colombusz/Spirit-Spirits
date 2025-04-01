@@ -143,7 +143,7 @@ const Details = () => {
             contentStyle={styles.footerContent}
             labelStyle={styles.footerLabel}
             style={styles.footerButton}
-            onPress={() => console.log('View Cart pressed')}
+            onPress={() => navigation.navigate('Cart')}
           >
             View Cart
           </Button>

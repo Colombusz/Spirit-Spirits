@@ -1,6 +1,6 @@
 // redux/actions/cartAction.js
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { addCartItem } from '../../utils/storage';
+import { addCartItem, getCartItems } from '../../utils/storage';
 
 export const addToCart = createAsyncThunk(
   'cart/addToCart',
@@ -16,15 +16,22 @@ export const addToCart = createAsyncThunk(
         price: liquor.price,
       });
 
-      console.log('Cart item added successfully:', {
-        userId,
-        liquor,
-        quantity,
-      });
-      // Return details to update Redux state
+      console.log('Cart item added successfully:');
       return { userId, liquor, quantity };
     } catch (error) {
       return thunkAPI.rejectWithValue(error.message);
     }
   }
 );
+
+export const fetchCartItems = createAsyncThunk(
+    'cart/fetchCartItems',
+    async ({ db }, thunkAPI) => {
+      try {
+        const cartItems = await getCartItems(db);
+        return cartItems;
+      } catch (error) {
+        return thunkAPI.rejectWithValue(error.message);
+      }
+    }
+  );

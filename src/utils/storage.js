@@ -124,3 +124,17 @@ export const addCartItem = async (dbInstance, cartItem) => {
   }
 };
 
+export const getCartItems = async (dbInstance) => {
+  if (!dbInstance) {
+    throw new Error("No dbInstance provided");
+  }
+  try {
+    const result = await dbInstance.getAllAsync("SELECT * FROM cart;");
+    console.log("Retrieved cart items:", result);
+    return result;
+  } catch (error) {
+    console.error("Error retrieving cart items", error);
+    throw error;
+  }
+}
+
