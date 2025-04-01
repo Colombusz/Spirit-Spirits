@@ -22,8 +22,9 @@ import {
 } from '@react-native-google-signin/google-signin';
 import { signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
 
-// Import redux async thunks for login and google login
 import { loginUser, googleLogin } from '../../redux/actions/authAction';
+import { Toasthelper } from '../../components/common/toasthelper';
+import Toast from 'react-native-toast-message';
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -45,11 +46,11 @@ const Login = () => {
     dispatch(loginUser({ email, password, db }))
       .unwrap()
       .then((user) => {
-        Alert.alert('Login Successful');
+        Toasthelper.showSuccess('Login Successful');
         navigation.navigate('Home');
       })
       .catch((error) => {
-        Alert.alert('Login Failed', error);
+        Toasthelper.showError('Login Failed', error.message);
       });
   };
 
@@ -69,18 +70,18 @@ const Login = () => {
         dispatch(googleLogin({ firebaseIdToken, db }))
           .unwrap()
           .then(() => {
-            Alert.alert('Google Login Successful');
+            Toasthelper.showSuccess('Google Login Successful');
             navigation.navigate('Home');
           })
         .catch((error) => {
-          Alert.alert('Google Login Failed', error);
+          Toasthelper.showError('Google Login Failed', error.message);
         });
       }
       setIsSubmitting(false);
     } catch (error) {
       setIsSubmitting(false);
       console.error('Google sign-in error:', error);
-      Alert.alert('Google sign-in error', error.message);
+      Toasthelper.showError('Google Sign-In Failed', error.message);
     }
   };
 

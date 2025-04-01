@@ -1,12 +1,13 @@
 // Account.jsx
 import React, { useEffect } from 'react';
-import { StyleSheet, ScrollView, View, ActivityIndicator, Alert } from 'react-native';
+import { StyleSheet, ScrollView, View, ActivityIndicator } from 'react-native';
 import { Card, Title, Paragraph, Avatar, Button } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { fetchCurrentUser } from '../../redux/actions/userAction';
 import { logoutUser } from '../../redux/actions/authAction';
 import { useAsyncSQLiteContext } from '../../utils/asyncSQliteProvider';
+import Toasthelper from '../../components/common/toasthelper';
 
 const Account = () => {
   const dispatch = useDispatch();
@@ -22,11 +23,11 @@ const Account = () => {
     dispatch(logoutUser(db))
       .unwrap()
       .then(() => {
-        Alert.alert('Success', 'You have been logged out successfully.');
+        Toasthelper.showSuccess('Logout Successful');
         navigation.navigate('Login');
       })
       .catch((error) => {
-        Alert.alert('Error', 'Failed to log out. Please try again.');
+        Toasthelper.showError('Logout Failed', error.message);
       });
   };
 

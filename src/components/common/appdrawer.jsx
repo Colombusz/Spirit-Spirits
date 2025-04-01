@@ -106,6 +106,17 @@ const AppDrawer = ({ closeDrawer }) => {
           />
           <DrawerItem
             icon={({ color, size }) => (
+              <Ionicons name="cart-outline" color={color} size={size} />
+            )}
+            label="Cart"
+            onPress={() => {
+              navigation.navigate('Cart');
+              closeDrawer();
+            }}
+          />
+          
+          <DrawerItem
+            icon={({ color, size }) => (
               <Ionicons name="list-outline" color={color} size={size} />
             )}
             label="More"

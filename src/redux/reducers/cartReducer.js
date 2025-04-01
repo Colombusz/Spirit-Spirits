@@ -1,6 +1,6 @@
 // redux/reducers/cartReducer.js
 import { createSlice } from '@reduxjs/toolkit';
-import { addToCart, fetchCartItems } from '../actions/cartAction';
+import { addToCart, fetchCartItems, removeCartItem, updateCartItemQuantity } from '../actions/cartAction';
 
 const initialState = {
   items: [],
@@ -49,7 +49,41 @@ const cartSlice = createSlice({
       .addCase(fetchCartItems.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+
+      .addCase(removeCartItem.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(removeCartItem.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = state.items.filter(
+          (item) => item.productId !== action.payload.productId
+        );
+      })
+      .addCase(removeCartItem.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      
+      // updateCartItemQuantity cases...
+      .addCase(updateCartItemQuantity.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateCartItemQuantity.fulfilled, (state, action) => {
+        state.loading = false;
+        const { productId, quantity } = action.payload;
+        const index = state.items.findIndex(item => item.productId === productId);
+        if (index !== -1) {
+          state.items[index].quantity = quantity;
+        }
+      })
+      .addCase(updateCartItemQuantity.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
+
   },
 });
 

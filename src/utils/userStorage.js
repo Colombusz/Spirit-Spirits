@@ -7,7 +7,7 @@ export const storeUserCredentials = async (user) => {
     await AsyncStorage.removeItem('user');
     // Store the new user data as a JSON string
     await AsyncStorage.setItem('user', JSON.stringify(user));
-    console.log('User credentials stored successfully (AsyncStorage):', user);
+    // console.log('User credentials stored successfully (AsyncStorage):', user);
   } catch (error) {
     console.error('Error storing user credentials:', error);
   }
@@ -16,7 +16,7 @@ export const storeUserCredentials = async (user) => {
 export const getUserCredentials = async () => {
   try {
     const data = await AsyncStorage.getItem('user');
-    console.log('User credentials retrieved successfully (AsyncStorage):', data);
+    // console.log('User credentials retrieved successfully (AsyncStorage):', data);
     return data ? JSON.parse(data) : null;
   } catch (error) {
     console.error('Error retrieving user credentials:', error);

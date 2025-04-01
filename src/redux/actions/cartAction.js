@@ -1,6 +1,6 @@
 // redux/actions/cartAction.js
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { addCartItem, getCartItems } from '../../utils/storage';
+import { addCartItem, getCartItems, removeCartItemdb, updateCartItemQuantitydb } from '../../utils/storage';
 
 export const addToCart = createAsyncThunk(
   'cart/addToCart',
@@ -26,10 +26,34 @@ export const addToCart = createAsyncThunk(
 
 export const fetchCartItems = createAsyncThunk(
     'cart/fetchCartItems',
-    async ({ db }, thunkAPI) => {
+    async ({ db, userId  }, thunkAPI) => {
       try {
-        const cartItems = await getCartItems(db);
+        const cartItems = await getCartItems(db, userId);
         return cartItems;
+      } catch (error) {
+        return thunkAPI.rejectWithValue(error.message);
+      }
+    }
+  );
+
+export const removeCartItem = createAsyncThunk(
+    'cart/removeCartItem',
+    async ({ db, user_id, productId }, thunkAPI) => {
+      try {
+        await removeCartItemdb(db, user_id, productId);
+        return { productId };
+      } catch (error) {
+        return thunkAPI.rejectWithValue(error.message);
+      }
+    }
+  );
+  
+export const updateCartItemQuantity = createAsyncThunk(
+    'cart/updateCartItemQuantity',
+    async ({ db, user_id, productId, quantity }, thunkAPI) => {
+      try {
+        await updateCartItemQuantitydb(db, user_id, productId, quantity);
+        return { productId, quantity };
       } catch (error) {
         return thunkAPI.rejectWithValue(error.message);
       }
