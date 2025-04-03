@@ -34,7 +34,7 @@ const Home = () => {
         <Card.Cover source={{ uri: imageUrl }} style={styles.cardCover} />
         <Card.Content>
           <Title style={styles.cardTitle}>{item.name}</Title>
-          <Paragraph style={styles.price}>${item.price}</Paragraph>
+          <Paragraph style={styles.price}>₱{item.price}</Paragraph>
         </Card.Content>
       </Card>
     );

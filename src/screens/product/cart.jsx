@@ -6,7 +6,7 @@ import { Title, Paragraph, Button, IconButton, Checkbox } from 'react-native-pap
 import { useDispatch, useSelector } from 'react-redux';
 import { useAsyncSQLiteContext } from '../../utils/asyncSQliteProvider';
 import { colors, spacing, globalStyles } from '../../components/common/theme';
-import { fetchCartItems, removeCartItem, updateCartItemQuantity } from '../../redux/actions/cartAction'; 
+import { fetchCartItems, removeCartItem, updateCartItemQuantity } from '../../redux/actions/cartAction';
 import { getUserCredentials } from '../../utils/userStorage';
 import { useNavigation } from '@react-navigation/native';
 
@@ -75,7 +75,7 @@ const Cart = () => {
       ]
     );
   };
-  
+
   const handleDecrease = (item) => {
     const currentQty = localQuantities[item.productId] || item.quantity;
     if (currentQty > 1) {
@@ -85,7 +85,7 @@ const Cart = () => {
       });
     }
   };
-  
+
   const handleIncrease = (item) => {
     const currentQty = localQuantities[item.productId] || item.quantity;
     if (currentQty < 24) {
@@ -96,25 +96,7 @@ const Cart = () => {
     }
   };
 
-  // When the user presses "Save", update the quantity in SQLite via Redux
-  const handleSaveQuantity = (item) => {
-    if (!db) {
-      console.error('Database instance is not ready');
-      return;
-    }
-    const newQty = localQuantities[item.productId];
-    // Only update if quantity has changed
-    if (newQty !== item.quantity) {
-      dispatch(
-        updateCartItemQuantity({
-          db,
-          user_id: item.user_id,
-          productId: item.productId,
-          quantity: newQty,
-        })
-      );
-    }
-  };
+  // Individual save function is no longer used
 
   const toggleSelectItem = (item) => {
     setSelectedItems({
@@ -128,7 +110,7 @@ const Cart = () => {
     const currentQuantity = localQuantities[item.productId] ?? item.quantity;
     
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         onPress={() => navigation.navigate('Details', { liquorId: item.productId })}
         activeOpacity={0.8}
       >
@@ -143,8 +125,8 @@ const Cart = () => {
           />
           <Title style={styles.itemTitle}>{item.name}</Title>
           <Paragraph>Quantity: {currentQuantity}</Paragraph>
-          <Paragraph>Price: ${item.price}</Paragraph>
-          {/* Footer row with checkbox on lower left and quantity controls on lower right */}
+          <Paragraph>Price: ₱{item.price}</Paragraph>
+          {/* Footer row with checkbox */}
           <View style={styles.itemFooter}>
             <Checkbox
               status={selectedItems[item.productId] ? 'checked' : 'unchecked'}
@@ -152,38 +134,64 @@ const Cart = () => {
               color={colors.primary}
               style={styles.checkbox}
             />
-            <View style={styles.quantityControl}>
-              <Button
-                mode="contained"
-                onPress={() => handleDecrease(item)}
-                disabled={currentQuantity <= 1}
-                style={styles.qtyButton}
-              >
-                –
-              </Button>
-              <Button
-                mode="contained"
-                onPress={() => handleIncrease(item)}
-                disabled={currentQuantity >= 24}
-                style={styles.qtyButton}
-              >
-                +
-              </Button>
-              {/* Save button appears if local quantity differs from stored quantity */}
-              {currentQuantity !== item.quantity && (
-                <Button
-                  mode="contained"
-                  onPress={() => handleSaveQuantity(item)}
-                  style={styles.saveButton}
-                >
-                  Save
-                </Button>
-              )}
-            </View>
+          </View>
+          {/* Quantity Buttons placed at the bottom center */}
+          <View style={styles.quantityContainer}>
+            <Button
+              mode="contained"
+              onPress={() => handleDecrease(item)}
+              disabled={currentQuantity <= 1}
+              style={[
+                styles.qtyButton,
+                currentQuantity <= 1 && styles.disabledQtyButton
+              ]}
+              labelStyle={[
+                styles.qtyButtonLabel,
+                currentQuantity <= 1 && styles.disabledQtyButtonLabel
+              ]}
+            >
+              –
+            </Button>
+            <Button
+              mode="contained"
+              onPress={() => handleIncrease(item)}
+              disabled={currentQuantity >= 24}
+              style={styles.qtyButton}
+              labelStyle={styles.qtyButtonLabel}
+            >
+              +
+            </Button>
           </View>
         </View>
       </TouchableOpacity>
     );
+  };
+
+  // Check if any items have modified quantities
+  const hasChanges = items && items.some(item => {
+    const localQty = localQuantities[item.productId] ?? item.quantity;
+    return localQty !== item.quantity;
+  });
+
+  // Universal Save All Changes handler
+const handleSaveAllChanges = async () => {
+    try {
+      await db.withTransactionAsync(async () => {
+        for (const item of items) {
+          const localQty = localQuantities[item.productId] ?? item.quantity;
+          if (localQty !== item.quantity) {
+            await db.runAsync(
+              "UPDATE cart SET quantity = ? WHERE user_id = ? AND productId = ?;",
+              [localQty, item.user_id, item.productId]
+            );
+          }
+        }
+      });
+      // Optionally, refresh the cart items after updating.
+      dispatch(fetchCartItems({ db, userId }));
+    } catch (error) {
+      console.error("Error saving all changes", error);
+    }
   };
 
   // Compute total price based on current quantities for selected items only
@@ -201,7 +209,7 @@ const Cart = () => {
   const handleCheckout = () => {
     const selectedProducts = items.filter(item => selectedItems[item.productId]);
     console.log('Selected products for checkout:', selectedProducts);
-    // navigation.navigate('Checkout', { selectedProducts });
+    navigation.navigate('Checkout', { selectedProducts });
   };
 
   if (loading) {
@@ -235,18 +243,34 @@ const Cart = () => {
             <Paragraph>Your cart is empty.</Paragraph>
           </View>
         }
+        // Universal Save button as a footer component
+        ListFooterComponent={
+          hasChanges && (
+            <View style={styles.universalSaveContainer}>
+              <Button
+                mode="contained"
+                onPress={handleSaveAllChanges}
+                style={styles.universalSaveButton}
+                labelStyle={styles.universalSaveButtonLabel}
+              >
+                Save All Changes
+              </Button>
+            </View>
+          )
+        }
       />
       {/* Footer Section */}
       <View style={styles.footerContainer}>
         <View style={styles.totalContainer}>
           <Title>Estimated Price:</Title>
-          <Paragraph>${computeTotal()}</Paragraph>
+          <Paragraph>₱{computeTotal()}</Paragraph>
         </View>
         <View style={styles.actionButtons}>
           <Button
             mode="outlined"
             onPress={() => navigation.navigate('Home')}
             style={styles.browseButton}
+            labelStyle={styles.browseButtonLabel}
           >
             Browse Liquors
           </Button>
@@ -254,6 +278,7 @@ const Cart = () => {
             mode="contained"
             onPress={handleCheckout}
             style={styles.checkoutButton}
+            labelStyle={styles.checkoutButtonLabel}
           >
             Checkout
           </Button>
@@ -299,23 +324,52 @@ const styles = StyleSheet.create({
   },
   itemFooter: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
     alignItems: 'center',
     marginTop: spacing.medium,
   },
   checkbox: {
-    // Positioned at the lower left inside the footer row
+    // additional styling if needed
   },
   quantityControl: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  qtyButton: {
-    marginRight: spacing.small,
+  quantityContainer: {
+    position: 'absolute',
+    bottom: spacing.medium,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  saveButton: {
-    marginLeft: spacing.small,
-    backgroundColor: colors.primary,
+  qtyButton: {
+    backgroundColor: colors.bronzeShade1,
+    marginHorizontal: spacing.small,
+  },
+  qtyButtonLabel: {
+    color: '#ffffff',
+  },
+  disabledQtyButton: {
+    backgroundColor: 'transparent',
+  },
+  disabledQtyButtonLabel: {
+    color: colors.placeholder,
+  },
+  universalSaveContainer: {
+    marginTop: spacing.medium,
+    padding: spacing.small,
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: colors.placeholder,
+  },
+  universalSaveButton: {
+    backgroundColor: colors.bronzeShade1,
+    width: '60%',
+  },
+  universalSaveButtonLabel: {
+    color: '#ffffff',
   },
   footerContainer: {
     position: 'absolute',
@@ -340,10 +394,18 @@ const styles = StyleSheet.create({
   checkoutButton: {
     flex: 1,
     marginLeft: spacing.small,
+    backgroundColor: colors.bronzeShade1,
+  },
+  checkoutButtonLabel: {
+    color: '#ffffff',
   },
   browseButton: {
     flex: 1,
     marginRight: spacing.small,
+    borderColor: colors.bronzeShade1,
+  },
+  browseButtonLabel: {
+    color: colors.bronzeShade1,
   },
   emptyContainer: {
     flex: 1,
