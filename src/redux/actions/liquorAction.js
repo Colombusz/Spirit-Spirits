@@ -2,7 +2,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import Constants from 'expo-constants';
 
-const apiURL = Constants.expoConfig.extra?.BACKEND_URL || 'http://192.168.1.123:5000';
+const apiURL = Constants.expoConfig.extra?.BACKEND_URL || 'http://192.168.0.155:5000';
 
 export const fetchLiquors = createAsyncThunk(
   'liquor/fetchLiquors',
