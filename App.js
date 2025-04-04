@@ -7,6 +7,7 @@ import { Provider } from 'react-redux';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { AsyncSQLiteProvider } from './src/utils/asyncSQliteProvider';
 import { migrateDbIfNeeded } from './src/utils/storage';
+import Toast from 'react-native-toast-message';
 
 export default function App() {
   useEffect(() => {
@@ -21,6 +22,7 @@ export default function App() {
       <Provider store={store}>
         <AsyncSQLiteProvider databaseName="spirits.db" onInit={migrateDbIfNeeded}>
           <Navigator />
+          <Toast />
         </AsyncSQLiteProvider>
       </Provider>
     </SafeAreaProvider>

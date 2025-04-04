@@ -15,6 +15,7 @@ export async function migrateDbIfNeeded(dbInstance) {
     await dbInstance.execAsync(`
       CREATE TABLE IF NOT EXISTS cart (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
         productId TEXT NOT NULL,
         name TEXT NOT NULL,
         quantity INTEGER NOT NULL,
@@ -98,4 +99,94 @@ export const logTableContents = async (dbInstance, tableName) => {
     );
   });
 };
+
+export const addCartItem = async (dbInstance, cartItem) => {
+  if (!dbInstance) {
+    throw new Error("No dbInstance provided");
+  }
+  try {
+    await dbInstance.withTransactionAsync(async () => {
+      // Check if the cart item already exists for the user
+      const existingItem = await dbInstance.getFirstAsync(
+        "SELECT * FROM cart WHERE user_id = ? AND productId = ?;",
+        [cartItem.user_id, cartItem.productId]
+      );
+      if (existingItem) {
+        // If it exists, update the quantity
+        await dbInstance.runAsync(
+          "UPDATE cart SET quantity = quantity + ? WHERE user_id = ? AND productId = ?;",
+          [cartItem.quantity, cartItem.user_id, cartItem.productId]
+        );
+        console.log("Cart item updated successfully");
+        return;
+      }
+      await dbInstance.runAsync(
+        "INSERT INTO cart (user_id, productId, name, quantity, price) VALUES (?, ?, ?, ?, ?);",
+        [
+          cartItem.user_id,
+          cartItem.productId,
+          cartItem.name,
+          cartItem.quantity,
+          cartItem.price,
+        ]
+      );
+    });
+    console.log("Cart item stored successfully");
+  } catch (error) {
+    console.error("Error storing cart item", error);
+    throw error;
+  }
+};
+
+export const getCartItems = async (dbInstance, user_id) => {
+  if (!dbInstance) {
+    throw new Error("No dbInstance provided");
+  }
+  try {
+    const result = await dbInstance.getAllAsync(`SELECT * FROM cart where user_id = ?;`, [user_id]);
+    if (result.length === 0) {
+      console.log("No cart items found for user:", user_id);
+      return [];
+    }
+    // console.log("Retrieved cart items:", result);
+    return result;
+  } catch (error) {
+    console.error("Error retrieving cart items", error);
+    throw error;
+  }
+}
+
+export const removeCartItemdb = async (dbInstance, user_id, productId) => {
+  if (!dbInstance) throw new Error("No dbInstance provided");
+  try {
+    await dbInstance.withTransactionAsync(async () => {
+      await dbInstance.runAsync(
+        "DELETE FROM cart WHERE user_id = ? AND productId = ?;",
+        [user_id, productId]
+      );
+    });
+    console.log("Cart item removed successfully");
+  } catch (error) {
+    console.error("Error removing cart item", error);
+    throw error;
+  }
+};
+
+export const updateCartItemQuantitydb = async (dbInstance, user_id, productId, quantity) => {
+  if (!dbInstance) throw new Error("No dbInstance provided");
+  try {
+    await dbInstance.withTransactionAsync(async () => {
+      await dbInstance.runAsync(
+        "UPDATE cart SET quantity = ? WHERE user_id = ? AND productId = ?;",
+        [quantity, user_id, productId]
+      );
+    });
+    console.log("Cart item quantity updated successfully");
+  } catch (error) {
+    console.error("Error updating cart item quantity", error);
+    throw error;
+  }
+};
+
+
 

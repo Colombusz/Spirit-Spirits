@@ -18,6 +18,7 @@ const AppDrawer = ({ closeDrawer }) => {
         try {
           const userData = await getUserCredentials();
           console.log('Retrieved user from AsyncStorage:', userData);
+
           setUser(userData);
         } catch (error) {
           console.error('Error fetching user:', error);
@@ -103,6 +104,17 @@ const AppDrawer = ({ closeDrawer }) => {
               closeDrawer();
             }}
           />
+          <DrawerItem
+            icon={({ color, size }) => (
+              <Ionicons name="cart-outline" color={color} size={size} />
+            )}
+            label="Cart"
+            onPress={() => {
+              navigation.navigate('Cart');
+              closeDrawer();
+            }}
+          />
+          
           <DrawerItem
             icon={({ color, size }) => (
               <Ionicons name="list-outline" color={color} size={size} />

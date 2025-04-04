@@ -13,6 +13,8 @@ import Signup from '../screens/common/signup';
 import Home from '../screens/common/home';
 import Account from '../screens/user/account';
 import Details from '../screens/product/details';
+import Cart from '../screens/product/cart';
+import Checkout from '../screens/product/checkout';
 
 // Custom Drawer 
 import AppDrawer from '../components/common/appdrawer';
@@ -41,6 +43,8 @@ const Navigator = () => {
           <Stack.Screen name="Home" component={Home} />
           <Stack.Screen name="Account" component={Account} />
           <Stack.Screen name="Details" component={Details} />
+          <Stack.Screen name="Cart" component={Cart} />
+          <Stack.Screen name="Checkout" component={Checkout} />
 
         </Stack.Navigator>
 
@@ -60,10 +64,10 @@ export default Navigator;
 const styles = StyleSheet.create({
   floatingButton: {
     position: 'absolute',
-    top: 40,
+    top: 20,
     left: 20,
     zIndex: 10,
-    backgroundColor: 'white',
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
     padding: 5,
     borderRadius: 20,
     elevation: 5,
@@ -74,7 +78,7 @@ const styles = StyleSheet.create({
     left: 0,
     width: 240,
     height: '100%',
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     zIndex: 20,
     elevation: 10,
   },

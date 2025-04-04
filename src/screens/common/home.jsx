@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchLiquors, fetchLiquorById } from '../../redux/actions/liquorAction';
 import { useAsyncSQLiteContext } from '../../utils/asyncSQliteProvider';
 import { colors, spacing, globalStyles } from '../../components/common/theme';
+import Toast from 'react-native-toast-message';
 
 const Home = () => {
   const db = useAsyncSQLiteContext();
@@ -33,7 +34,7 @@ const Home = () => {
         <Card.Cover source={{ uri: imageUrl }} style={styles.cardCover} />
         <Card.Content>
           <Title style={styles.cardTitle}>{item.name}</Title>
-          <Paragraph style={styles.price}>${item.price}</Paragraph>
+          <Paragraph style={styles.price}>₱{item.price}</Paragraph>
         </Card.Content>
       </Card>
     );

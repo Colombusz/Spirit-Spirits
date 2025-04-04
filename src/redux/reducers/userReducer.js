@@ -1,6 +1,6 @@
 // userReducer.js
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchCurrentUser } from '../actions/userAction';
+import { fetchCurrentUser, updateProfile } from '../actions/userAction';
 
 const initialState = {
   currentUser: null,
@@ -25,6 +25,19 @@ const userSlice = createSlice({
         state.currentUser = action.payload;
       })
       .addCase(fetchCurrentUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      .addCase(updateProfile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.currentUser = action.payload;
+      })
+      .addCase(updateProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
