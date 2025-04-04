@@ -53,6 +53,20 @@
         }
       ],
       [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow spiritspirits to access your camera",
+          "microphonePermission": "Allow spiritspirits to access your microphone",
+          "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with your friends."
+        }
+      ],
+      [
         "expo-build-properties",
         {}
       ]
