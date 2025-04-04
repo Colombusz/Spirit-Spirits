@@ -18,7 +18,6 @@ const AppDrawer = ({ closeDrawer }) => {
         try {
           const userData = await getUserCredentials();
           console.log('Retrieved user from AsyncStorage:', userData);
-
           setUser(userData);
         } catch (error) {
           console.error('Error fetching user:', error);
@@ -44,7 +43,7 @@ const AppDrawer = ({ closeDrawer }) => {
           <View style={{ flexDirection: 'row', marginTop: 15 }}>
             <Avatar.Image
               source={{
-                uri: user?.image_url || 'https://via.placeholder.com/150',
+                uri: user?.image?.url || 'https://via.placeholder.com/150',
               }}
               size={70}
             />
@@ -57,7 +56,7 @@ const AppDrawer = ({ closeDrawer }) => {
           </View>
 
           <View style={styles.row}>
-            <View style={styles.section}>
+            {/* <View style={styles.section}>
               <Paragraph style={[styles.paragraph, styles.caption]}>
                 80
               </Paragraph>
@@ -68,7 +67,7 @@ const AppDrawer = ({ closeDrawer }) => {
                 100
               </Paragraph>
               <Caption style={styles.caption}>Followers</Caption>
-            </View>
+            </View> */}
           </View>
         </View>
 
@@ -114,7 +113,6 @@ const AppDrawer = ({ closeDrawer }) => {
               closeDrawer();
             }}
           />
-          
           <DrawerItem
             icon={({ color, size }) => (
               <Ionicons name="list-outline" color={color} size={size} />
