@@ -1,11 +1,22 @@
-// checkout.jsx
+// Checkout.jsx
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { 
+  View, 
+  StyleSheet, 
+  ScrollView, 
+  KeyboardAvoidingView, 
+  Platform, 
+  Modal, 
+  TouchableOpacity, 
+  Alert, 
+  Text 
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Title, Paragraph, Button, TextInput } from 'react-native-paper';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { globalStyles, spacing, colors } from '../../components/common/theme';
 import { getUserCredentials } from '../../utils/userStorage';
+import * as ImagePicker from 'expo-image-picker';
 
 const Checkout = () => {
   const navigation = useNavigation();
@@ -18,6 +29,7 @@ const Checkout = () => {
   });
   const [paymentMethod, setPaymentMethod] = useState('');
   const [proofOfPayment, setProofOfPayment] = useState(null);
+  const [proofModalVisible, setProofModalVisible] = useState(false);
 
   // Function to fetch and set the saved address from AsyncStorage.
   const handleUseExistingAddress = async () => {
@@ -50,8 +62,48 @@ const Checkout = () => {
   const shippingFee = 120;
   const total = subtotal + vat + shippingFee;
 
+  // Open the proof of payment modal
   const handleUploadPhoto = () => {
-    console.log('Upload photo for proof of payment');
+    setProofModalVisible(true);
+  };
+
+  // Use ImagePicker to launch the gallery for proof upload
+  const pickProofFromGallery = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      Alert.alert("Permission Denied", "You need to allow access to your gallery.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+      setProofOfPayment(uri);
+      setProofModalVisible(false);
+    }
+  };
+
+  // Use ImagePicker to launch the camera for proof upload
+  const takeProofPhotoWithCamera = async () => {
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permissionResult.granted) {
+      Alert.alert("Permission Denied", "You need to allow access to your camera.");
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+      setProofOfPayment(uri);
+      setProofModalVisible(false);
+    }
   };
 
   return (
@@ -182,6 +234,29 @@ const Checkout = () => {
             Place Order
           </Button>
         </View>
+
+        {/* Modal for Proof of Payment Image Picker */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={proofModalVisible}
+          onRequestClose={() => setProofModalVisible(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Upload Proof of Payment</Text>
+              <TouchableOpacity style={styles.modalButton} onPress={takeProofPhotoWithCamera}>
+                <Text style={styles.modalButtonText}>Take Photo</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalButton} onPress={pickProofFromGallery}>
+                <Text style={styles.modalButtonText}>Choose from Gallery</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalCancelButton} onPress={() => setProofModalVisible(false)}>
+                <Text style={styles.modalCancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -311,6 +386,42 @@ const styles = StyleSheet.create({
   },
   browseButton: {
     flex: 1,
+  },
+  // Modal styles
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    margin: 20,
+    padding: 20,
+    borderRadius: 10,
+  },
+  modalTitle: {
+    fontSize: 20,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  modalButton: {
+    backgroundColor: colors.secondary,
+    padding: 10,
+    borderRadius: 5,
+    marginVertical: 5,
+  },
+  modalButtonText: {
+    color: '#fff',
+    textAlign: 'center',
+  },
+  modalCancelButton: {
+    padding: 10,
+    borderRadius: 5,
+    marginVertical: 5,
+  },
+  modalCancelButtonText: {
+    color: colors.primary,
+    textAlign: 'center',
   },
 });
 

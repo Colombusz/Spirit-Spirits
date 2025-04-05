@@ -1,6 +1,15 @@
 // Account.jsx
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, ScrollView, View, ActivityIndicator } from 'react-native';
+import { 
+  StyleSheet, 
+  ScrollView, 
+  View, 
+  ActivityIndicator, 
+  TouchableOpacity, 
+  Text, 
+  Modal,
+  Alert
+} from 'react-native';
 import { Card, Title, Paragraph, Avatar, Button, TextInput } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
@@ -9,6 +18,7 @@ import { logoutUser } from '../../redux/actions/authAction';
 import { useAsyncSQLiteContext } from '../../utils/asyncSQliteProvider';
 import Toasthelper from '../../components/common/toasthelper';
 import { colors } from '../../components/common/theme';
+import * as ImagePicker from "expo-image-picker";
 
 const Account = () => {
   const dispatch = useDispatch();
@@ -16,8 +26,7 @@ const Account = () => {
   const db = useAsyncSQLiteContext();
   const { currentUser, loading, error } = useSelector(state => state.user);
 
-  // Local state to track edit mode and input values.
-  // Include a userId field so it can be sent to the backend.
+  // Local state for edit mode and profile fields
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState({
     userId: '',
@@ -25,16 +34,18 @@ const Account = () => {
     lastname: '',
     username: '',
     email: '',
-    // Assuming address is an object with street, city, postalCode, country.
     address: { street: '', city: '', postalCode: '', country: '' },
     phone: '',
+    image: {} // will store image info (uri)
   });
+  // State for photo integration using ImagePicker
+  const [capturedPhoto, setCapturedPhoto] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     dispatch(fetchCurrentUser());
   }, [dispatch]);
 
-  // When currentUser loads, initialize editedUser state (include userId)
   useEffect(() => {
     if (currentUser) {
       setEditedUser({
@@ -45,6 +56,7 @@ const Account = () => {
         email: currentUser.email || '',
         address: currentUser.address || { street: '', city: '', postalCode: '', country: '' },
         phone: currentUser.phone || '',
+        image: currentUser.image || {}
       });
     }
   }, [currentUser]);
@@ -66,7 +78,6 @@ const Account = () => {
   };
 
   const handleCancelEdit = () => {
-    // Reset editedUser to currentUser data and exit edit mode.
     if (currentUser) {
       setEditedUser({
         _id: currentUser._id,
@@ -76,9 +87,11 @@ const Account = () => {
         email: currentUser.email || '',
         address: currentUser.address || { street: '', city: '', postalCode: '', country: '' },
         phone: currentUser.phone || '',
+        image: currentUser.image || {}
       });
     }
     setIsEditing(false);
+    setModalVisible(false);
   };
 
   const handleSaveProfile = () => {
@@ -91,6 +104,63 @@ const Account = () => {
       .catch((error) => {
         Toasthelper.showError('Profile update failed', error.message);
       });
+  };
+
+  // Use ImagePicker to launch the gallery
+  const pickImageFromGallery = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      Alert.alert("Permission Denied", "You need to allow access to your gallery.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+      setCapturedPhoto(uri);
+      setEditedUser(prev => ({ ...prev, image: { url: uri } }));
+      setModalVisible(false);
+    }
+  };
+
+  // Use ImagePicker to launch the camera
+  const takePhotoWithCamera = async () => {
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permissionResult.granted) {
+      Alert.alert("Permission Denied", "You need to allow access to your camera.");
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+      setCapturedPhoto(uri);
+      setEditedUser(prev => ({ ...prev, image: { url: uri } }));
+      setModalVisible(false);
+    }
+  };
+
+  const renderAddress = () => {
+    const { address } = currentUser;
+    if (address && typeof address === 'object' && Object.keys(address).length > 0) {
+      return (
+        <>
+          <Title>Address</Title>
+          <Paragraph>{address.street || 'N/A'}</Paragraph>
+          <Paragraph>{address.city || 'N/A'}</Paragraph>
+          <Paragraph>{address.postalCode || 'N/A'}</Paragraph>
+          <Paragraph>{address.country || 'N/A'}</Paragraph>
+        </>
+      );
+    }
+    return <Paragraph>No address available.</Paragraph>;
   };
 
   if (loading) {
@@ -116,24 +186,7 @@ const Account = () => {
     );
   }
 
-  // Destructure for display in view mode
   const { firstname, lastname, username, email, address, image } = currentUser;
-
-  // Handle address rendering; adjust property names as needed.
-  const renderAddress = () => {
-    if (address && typeof address === 'object' && Object.keys(address).length > 0) {
-      return (
-        <>
-          <Title>Address</Title>
-          <Paragraph>{address.street || 'N/A'}</Paragraph>
-          <Paragraph>{address.city || 'N/A'}</Paragraph>
-          <Paragraph>{address.postalCode || 'N/A'}</Paragraph>
-          <Paragraph>{address.country || 'N/A'}</Paragraph>
-        </>
-      );
-    }
-    return <Paragraph>No address available.</Paragraph>;
-  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -142,17 +195,35 @@ const Account = () => {
           title={`${firstname} ${lastname}`}
           subtitle={`@${username}`}
           left={(props) => (
-            <Avatar.Image
-              {...props}
-              source={{
-                uri: image?.url || 'https://via.placeholder.com/150',
-              }}
-            />
+            <>
+              {isEditing ? (
+                <Avatar.Image
+                  {...props}
+                  source={{
+                    uri: capturedPhoto || image?.url || 'https://via.placeholder.com/150',
+                  }}
+                />
+              ) : (
+                <Avatar.Image
+                  {...props}
+                  source={{
+                    uri: image?.url || 'https://via.placeholder.com/150',
+                  }}
+                />
+              )}
+            </>
           )}
         />
         <Card.Content>
           {isEditing ? (
             <>
+              <Button
+                onPress={() => setModalVisible(true)}
+                mode="outlined"
+                style={styles.updatePhotoButton}
+              >
+                Update Photo
+              </Button>
               <TextInput
                 label="First Name"
                 value={editedUser.firstname}
@@ -177,7 +248,6 @@ const Account = () => {
                 onChangeText={(text) => setEditedUser({ ...editedUser, email: text })}
                 style={styles.input}
               />
-              {/* Address Fields */}
               <TextInput
                 label="Street Address"
                 value={editedUser.address.street}
@@ -269,6 +339,29 @@ const Account = () => {
           </Button>
         </Card.Actions>
       </Card>
+
+      {/* Modal for image picker options */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Upload Photo</Text>
+            <TouchableOpacity style={styles.modalButton} onPress={takePhotoWithCamera}>
+              <Text style={styles.modalButtonText}>Take Photo</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.modalButton} onPress={pickImageFromGallery}>
+              <Text style={styles.modalButtonText}>Choose from Gallery</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.modalCancelButton} onPress={() => setModalVisible(false)}>
+              <Text style={styles.modalCancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -306,14 +399,14 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 10,
     marginVertical: 5,
-    borderColor: colors.secondary, // Bronze border color
+    borderColor: colors.secondary,
   },
   saveButton: {
-    backgroundColor: colors.secondary, // Bronze background
+    backgroundColor: colors.secondary,
   },
   cancelButton: {
     borderWidth: 1,
-    borderColor: colors.secondary, // Bronze border
+    borderColor: colors.secondary,
     backgroundColor: colors.secondary,
   },
   bronzeButton: {
@@ -334,5 +427,44 @@ const styles = StyleSheet.create({
   errorText: {
     color: 'red',
     marginBottom: 10,
+  },
+  updatePhotoButton: {
+    marginBottom: 10,
+  },
+  // Modal styles (based on your reference)
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    margin: 20,
+    padding: 20,
+    borderRadius: 10,
+  },
+  modalTitle: {
+    fontSize: 20,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  modalButton: {
+    backgroundColor: colors.secondary,
+    padding: 10,
+    borderRadius: 5,
+    marginVertical: 5,
+  },
+  modalButtonText: {
+    color: '#fff',
+    textAlign: 'center',
+  },
+  modalCancelButton: {
+    padding: 10,
+    borderRadius: 5,
+    marginVertical: 5,
+  },
+  modalCancelButtonText: {
+    color: colors.primary,
+    textAlign: 'center',
   },
 });

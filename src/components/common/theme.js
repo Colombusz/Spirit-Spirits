@@ -2,7 +2,7 @@
 
 export const colors = {
     // Primary and accent colors set to Bronze shades
-    primary: '#cd7f32',        // Main Bronze
+    primary: '#cd7f32',        // Purple Shade
     secondary: '#b9722d',      // Secondary Bronze shade
   
     // Background and surface colors using Ivory

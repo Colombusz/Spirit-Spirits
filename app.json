@@ -12,7 +12,7 @@
       "backgroundColor": "#ffffff"
     },
     "extra": {
-      "BACKEND_URL": "http://192.168.0.155:5000",
+      "BACKEND_URL": "http://192.168.137.62:5000",
       "eas": {
         "projectId": "b577b503-6578-436e-bfe3-bc3623f1acc5"
       }
@@ -50,6 +50,20 @@
             "enableFTS": false,
             "useSQLCipher": false
           }
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow spiritspirits to access your camera",
+          "microphonePermission": "Allow spiritspirits to access your microphone",
+          "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with your friends."
         }
       ],
       [
