@@ -107,28 +107,37 @@ export default function App() {
     setImageModalVisible(true);
   };
 
-    const handleSubmit = () => {
-        // Validation: Check if all required fields are filled
-        if (!name || !price || !description || !brand || !stock || !category || images.length === 0) {
-            alert("Please fill out all the fields and add at least one image.");
-            return;
-        }
-        const productDetails = {
-            name,
-            price,
-            description,
-            brand,
-            stock,
-            category,
-            
-          };
-        
-        
-          // Dispatch the action to your Redux slice (createLiquorSlice)
-          dispatch(createLiquor(productDetails, images));
-        //   console.log("Product details submitted:", images);
-          setSubmitted(true);
+  const handleSubmit = () => {
+    // Validation: Check if all required fields are filled
+    if (!name || !price || !description || !brand || !stock || !category || images.length === 0) {
+        alert("Please fill out all the fields and add at least one image.");
+        return;
     }
+    
+    const productDetails = {
+        name,
+        price,
+        description,
+        brand,
+        stock,
+        category,
+    };
+    
+    // Dispatch the action to your Redux slice (createLiquorSlice)
+    dispatch(createLiquor(productDetails, images));
+    
+    // Reset states after submitting the form
+    setname('');
+    setPrice('');
+    setDescription('');
+    setBrand('');
+    setStock('');
+    setCategory('');
+    setImages([]);
+    setSubmitted(true);
+    setImageModalVisible(false);
+    setSelectedImage(null);
+};
 
   return (
     <PaperProvider theme={bronzeTheme}>
