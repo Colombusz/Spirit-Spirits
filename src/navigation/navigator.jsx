@@ -3,12 +3,12 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { Provider as PaperProvider } from 'react-native-paper';
 
 // Screens
 import HomeScreen from '../screens/admin/index';
 import CreateLiquor from '../screens/admin/create';
-
-
+import AdminOrders from '../screens/admin/orders';
 import Login from '../screens/common/login';
 import About from '../screens/common/about';
 import Signup from '../screens/common/signup';
@@ -59,40 +59,43 @@ const Navigator = () => {
   if (loading) return null; // or a loading spinner
 
   return (
-    <NavigationContainer>
-      <View style={{ flex: 1 }}>
-        {/* Show floating menu button only when user is ready */}
-        <TouchableOpacity
-          style={styles.floatingButton}
-          onPress={() => setDrawerVisible(true)}
-        >
-          <Ionicons name="menu" size={30} color="#000" />
-        </TouchableOpacity>
+    <PaperProvider>
+      <NavigationContainer>
+        <View style={{ flex: 1 }}>
+          {/* Show floating menu button only when user is ready */}
+          <TouchableOpacity
+            style={styles.floatingButton}
+            onPress={() => setDrawerVisible(true)}
+          >
+            <Ionicons name="menu" size={30} color="#000" />
+          </TouchableOpacity>
 
-        <Stack.Navigator
-          initialRouteName={user?.isAdmin ? 'Adminhome' : 'Home'}
-          screenOptions={{ headerShown: false }}
-        >
-          {user?.isAdmin && (
-            <>
-              <Stack.Screen name="Adminhome" component={HomeScreen} />
-              <Stack.Screen name="CreateLiquor" component={CreateLiquor} />
-            </>
-          )}
-          {commonScreens}
-        </Stack.Navigator>
-
-        {drawerVisible && (
-          <View style={styles.drawerOverlay}>
-            {user?.isAdmin ? (
-              <AdminAppDrawer closeDrawer={() => setDrawerVisible(false)} />
-            ) : (
-              <AppDrawer closeDrawer={() => setDrawerVisible(false)} />
+          <Stack.Navigator
+            initialRouteName={user?.isAdmin ? 'Adminhome' : 'Home'}
+            screenOptions={{ headerShown: false }}
+          >
+            {user?.isAdmin && (
+              <>
+                <Stack.Screen name="Adminhome" component={HomeScreen} />
+                <Stack.Screen name="CreateLiquor" component={CreateLiquor} />
+                <Stack.Screen name="AdminOrders" component={AdminOrders} />
+              </>
             )}
-          </View>
-        )}
-      </View>
-    </NavigationContainer>
+            {commonScreens}
+          </Stack.Navigator>
+
+          {drawerVisible && (
+            <View style={styles.drawerOverlay}>
+              {user?.isAdmin ? (
+                <AdminAppDrawer closeDrawer={() => setDrawerVisible(false)} />
+              ) : (
+                <AppDrawer closeDrawer={() => setDrawerVisible(false)} />
+              )}
+            </View>
+          )}
+        </View>
+      </NavigationContainer>
+    </PaperProvider>
   );
 };
 

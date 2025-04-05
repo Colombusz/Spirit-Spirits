@@ -47,21 +47,26 @@ const Login = () => {
   const apiURL = BACKEND_URL || 'http://192.168.1.123:5000';
 
   const handleLogin = () => {
-    const usercred = dispatch(loginUser({ email, password, db }))
+    setIsSubmitting(true); // Show loading indicator
+    dispatch(loginUser({ email, password, db }))
       .unwrap()
       .then((user) => {
         Toasthelper.showSuccess('Login Successful');
+        console.log('Logged in user:', user);
+
+        // Navigate based on the user's role
+        if (user?.isAdmin) {
+          navigation.navigate('Adminhome');
+        } else {
+          navigation.navigate('Home');
+        }
       })
       .catch((error) => {
         Toasthelper.showError('Login Failed', error.message);
+      })
+      .finally(() => {
+        setIsSubmitting(false); // Hide loading indicator
       });
-
-      if (usercred.currentUser.isAdmin === true) {
-        navigation.navigate('Adminhome');
-      }
-      else{
-        navigation.navigate('Home');
-      }
   };
 
   const handleGoogleSignIn = async () => {

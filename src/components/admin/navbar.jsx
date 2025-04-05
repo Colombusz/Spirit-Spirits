@@ -87,15 +87,25 @@ const AdminAppDrawer = ({ closeDrawer }) => {
             }}
           />
           <DrawerItem
-                      icon={({ color, size }) => (
-                        <Ionicons name="person-outline" color={color} size={size} />
-                      )}
-                      label="Account"
-                      onPress={() => {
-                        navigation.navigate('Account');
-                        closeDrawer();
-                      }}
-                    />
+            icon={({ color, size }) => (
+              <Ionicons name="person-outline" color={color} size={size} />
+            )}
+            label="Account"
+            onPress={() => {
+              navigation.navigate('Account');
+              closeDrawer();
+            }}
+          />
+          <DrawerItem
+            icon={({ color, size }) => (
+              <Ionicons name="clipboard-outline" color={color} size={size} />
+            )}
+            label="Orders"
+            onPress={() => {
+              navigation.navigate('AdminOrders');
+              closeDrawer();
+            }}
+          />
         </View>
       </View>
     </DrawerContentScrollView>
