@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { View, StyleSheet, Dimensions, Animated } from 'react-native';
-import { Card, Text, Title, useTheme } from 'react-native-paper';
+import { View, StyleSheet, Dimensions, Animated, TouchableOpacity } from 'react-native';
+import { Card, Text, Title, useTheme, Menu, IconButton, Provider } from 'react-native-paper';
 
 const { width } = Dimensions.get('window');
 const ITEM_WIDTH = width * 0.8;
@@ -14,12 +14,30 @@ const CardItem = ({ liqour }) => {
   const theme = useTheme();
   const scrollX = useRef(new Animated.Value(0)).current;
   const [activeIndex, setActiveIndex] = useState(0);
+  const [menuVisible, setMenuVisible] = useState(false);
   
   // Handle image carousel scroll events
   const handleOnScroll = (event) => {
     const scrollPosition = event.nativeEvent.contentOffset.x;
     const index = Math.round(scrollPosition / ITEM_WIDTH);
     setActiveIndex(index);
+  };
+
+  // Toggle dropdown menu
+  const openMenu = () => setMenuVisible(true);
+  const closeMenu = () => setMenuVisible(false);
+
+  // Handle button actions
+  const handleButtonOne = () => {
+    // Add your button one action here
+    console.log('Button One Pressed');
+    closeMenu();
+  };
+
+  const handleButtonTwo = () => {
+    // Add your button two action here
+    console.log('Button Two Pressed');
+    closeMenu();
   };
 
   // Render image in carousel
@@ -76,43 +94,61 @@ const CardItem = ({ liqour }) => {
     );
   };
 
-  return (
-    <Card style={styles.cardItem}>
-      <Card.Content>
-        <View style={styles.carouselContainer}>
-          <AnimatedFlatList
-            data={liqour.images}
-            keyExtractor={(_, index) => `image-${index}`}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            snapToInterval={ITEM_WIDTH}
-            decelerationRate="fast"
-            pagingEnabled
-            bounces={false}
-            contentContainerStyle={styles.carouselContent}
-            onScroll={Animated.event(
-              [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-              { useNativeDriver: true, listener: handleOnScroll }
-            )}
-            renderItem={renderImage}
-          />
-          {renderPaginationDots()}
-        </View>
-        
-        <View style={styles.textContainer}>
-          <Title>{liqour.brand}</Title>
-          {liqour.description && (
-            <Text style={styles.descriptionText} numberOfLines={2}>
-              {liqour.description}
-            </Text>
-          )}
-          {liqour.price && (
-            <Text style={styles.priceText}>${liqour.price}</Text>
-          )}
-        </View>
-      </Card.Content>
-    </Card>
-  );
+return (
+    <Provider>
+        <Card style={styles.cardItem}>
+            <Card.Content>
+                <View style={styles.headerContainer}>
+                    <Title>{liqour.brand}</Title>
+                    
+                    <View style={styles.buttonGroup}> 
+                        <IconButton
+                            icon="pencil-outline"
+                            onPress={() => console.log('Edit pressed')}
+                            size={24}
+                        />
+                        <IconButton
+                            icon="trash-can-outline"
+                            onPress={() => console.log('Edit pressed')}
+                            size={24}
+                        />
+                    </View>
+                </View>
+                
+                <View style={styles.carouselContainer}>
+                    <AnimatedFlatList
+                        data={liqour.images}
+                        keyExtractor={(_, index) => `image-${index}`}
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        snapToInterval={ITEM_WIDTH}
+                        decelerationRate="fast"
+                        pagingEnabled
+                        bounces={false}
+                        contentContainerStyle={styles.carouselContent}
+                        onScroll={Animated.event(
+                            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+                            { useNativeDriver: true, listener: handleOnScroll }
+                        )}
+                        renderItem={renderImage}
+                    />
+                    {renderPaginationDots()}
+                </View>
+                
+                <View style={styles.textContainer}>
+                    {liqour.description && (
+                        <Text style={styles.descriptionText} numberOfLines={2}>
+                            {liqour.description}
+                        </Text>
+                    )}
+                    {liqour.price && (
+                        <Text style={styles.priceText}>${liqour.price}</Text>
+                    )}
+                </View>
+            </Card.Content>
+        </Card>
+    </Provider>
+);
 };
 
 const styles = StyleSheet.create({
@@ -121,6 +157,21 @@ const styles = StyleSheet.create({
     elevation: 4,
     borderRadius: 12,
     overflow: 'hidden',
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: -8, // Remove extra right padding
+  },
+  menuContent: {
+    marginTop: 32, // Adjust this value to position the menu
+    width: 150,
   },
   carouselContainer: {
     height: ITEM_HEIGHT + 20,
