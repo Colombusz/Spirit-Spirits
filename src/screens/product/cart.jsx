@@ -110,62 +110,67 @@ const Cart = () => {
     const currentQuantity = localQuantities[item.productId] ?? item.quantity;
     
     return (
-      <TouchableOpacity
-        onPress={() => navigation.navigate('Details', { liquorId: item.productId })}
-        activeOpacity={0.8}
-      >
-        <View style={styles.cartItem}>
-          {/* Remove button in top right */}
-          <IconButton
-            icon="delete"
-            size={20}
-            color={colors.error}
-            style={styles.removeButton}
-            onPress={() => handleRemove(item)}
-          />
+      <View style={styles.cartItem}>
+        {/* Remove button in top right with a higher zIndex */}
+        <IconButton
+          icon="delete"
+          size={16}
+          color={colors.error}
+          style={styles.removeButton}
+          onPress={() => handleRemove(item)}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        />
+        {/* Touchable area for navigating to Details.
+            Adding a right margin so it doesn't cover the IconButton */}
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Details', { liquorId: item.productId })}
+          activeOpacity={0.8}
+          style={styles.itemDetailsContainer}
+        >
           <Title style={styles.itemTitle}>{item.name}</Title>
           <Paragraph>Quantity: {currentQuantity}</Paragraph>
           <Paragraph>Price: ₱{item.price}</Paragraph>
-          {/* Footer row with checkbox */}
-          <View style={styles.itemFooter}>
-            <Checkbox
-              status={selectedItems[item.productId] ? 'checked' : 'unchecked'}
-              onPress={() => toggleSelectItem(item)}
-              color={colors.primary}
-              style={styles.checkbox}
-            />
-          </View>
-          {/* Quantity Buttons placed at the bottom center */}
-          <View style={styles.quantityContainer}>
-            <Button
-              mode="contained"
-              onPress={() => handleDecrease(item)}
-              disabled={currentQuantity <= 1}
-              style={[
-                styles.qtyButton,
-                currentQuantity <= 1 && styles.disabledQtyButton
-              ]}
-              labelStyle={[
-                styles.qtyButtonLabel,
-                currentQuantity <= 1 && styles.disabledQtyButtonLabel
-              ]}
-            >
-              –
-            </Button>
-            <Button
-              mode="contained"
-              onPress={() => handleIncrease(item)}
-              disabled={currentQuantity >= 24}
-              style={styles.qtyButton}
-              labelStyle={styles.qtyButtonLabel}
-            >
-              +
-            </Button>
-          </View>
+        </TouchableOpacity>
+        {/* Footer row with checkbox */}
+        <View style={styles.itemFooter}>
+          <Checkbox
+            status={selectedItems[item.productId] ? 'checked' : 'unchecked'}
+            onPress={() => toggleSelectItem(item)}
+            color={colors.primary}
+            style={styles.checkbox}
+          />
         </View>
-      </TouchableOpacity>
+        {/* Quantity Buttons placed at the bottom center */}
+        <View style={styles.quantityContainer}>
+          <Button
+            mode="contained"
+            onPress={() => handleDecrease(item)}
+            disabled={currentQuantity <= 1}
+            style={[
+              styles.qtyButton,
+              currentQuantity <= 1 && styles.disabledQtyButton,
+            ]}
+            labelStyle={[
+              styles.qtyButtonLabel,
+              currentQuantity <= 1 && styles.disabledQtyButtonLabel,
+            ]}
+          >
+            –
+          </Button>
+          <Button
+            mode="contained"
+            onPress={() => handleIncrease(item)}
+            disabled={currentQuantity >= 24}
+            style={styles.qtyButton}
+            labelStyle={styles.qtyButtonLabel}
+          >
+            +
+          </Button>
+        </View>
+      </View>
     );
   };
+  
 
   // Check if any items have modified quantities
   const hasChanges = items && items.some(item => {
@@ -319,8 +324,10 @@ const styles = StyleSheet.create({
   },
   removeButton: {
     position: 'absolute',
-    top: 0,
-    right: 0,
+    top: spacing.small / 2,
+    right: spacing.small / 2,
+    padding: 4,
+    zIndex: 10,
   },
   itemFooter: {
     flexDirection: 'row',
@@ -330,6 +337,10 @@ const styles = StyleSheet.create({
   },
   checkbox: {
     // additional styling if needed
+  },
+  itemDetailsContainer: {
+    // Add right margin so it doesn't extend over the remove button
+    marginRight: spacing.large, 
   },
   quantityControl: {
     flexDirection: 'row',

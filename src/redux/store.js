@@ -5,6 +5,8 @@ import liquorReducer from './reducers/liquorReducer';
 import userReducer from './reducers/userReducer';
 import cartReducer from './reducers/cartReducer';
 import createLiquorReducer from './slices/createLiqourSlice';
+import orderReducer from './reducers/orderReducer'; 
+
 const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -12,6 +14,7 @@ const store = configureStore({
     user: userReducer,
     cart: cartReducer,
     createdLiquor: createLiquorReducer,
+    order: orderReducer,
   },
 });
 

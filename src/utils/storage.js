@@ -188,5 +188,23 @@ export const updateCartItemQuantitydb = async (dbInstance, user_id, productId, q
   }
 };
 
+export const removeMultipleCartItems = async (dbInstance, user_id, productIds) => {
+  if (!dbInstance) throw new Error("No dbInstance provided");
+  try {
+    // Build a query with placeholders for each productId
+    const placeholders = productIds.map(() => '?').join(', ');
+    const query = `DELETE FROM cart WHERE user_id = ? AND productId IN (${placeholders});`;
+    await dbInstance.withTransactionAsync(async () => {
+      await dbInstance.runAsync(query, [user_id, ...productIds]);
+    });
+    console.log("Selected cart items removed successfully for user:", user_id);
+  } catch (error) {
+    console.error("Error removing selected cart items", error);
+    throw error;
+  }
+};
+
+
+
 
 
