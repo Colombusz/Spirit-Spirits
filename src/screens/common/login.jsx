@@ -26,10 +26,14 @@ import { loginUser, googleLogin } from '../../redux/actions/authAction';
 import { Toasthelper } from '../../components/common/toasthelper';
 import Toast from 'react-native-toast-message';
 
+import { useSelector } from 'react-redux';
+
 const Login = () => {
+  const usercred = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const db = useAsyncSQLiteContext();
   const navigation = useNavigation();
+ 
 
   if (!db) {
     console.warn('Database is not initialized yet.');
@@ -43,15 +47,21 @@ const Login = () => {
   const apiURL = BACKEND_URL || 'http://192.168.1.123:5000';
 
   const handleLogin = () => {
-    dispatch(loginUser({ email, password, db }))
+    const usercred = dispatch(loginUser({ email, password, db }))
       .unwrap()
       .then((user) => {
         Toasthelper.showSuccess('Login Successful');
-        navigation.navigate('Home');
       })
       .catch((error) => {
         Toasthelper.showError('Login Failed', error.message);
       });
+
+      if (usercred.currentUser.isAdmin === true) {
+        navigation.navigate('Adminhome');
+      }
+      else{
+        navigation.navigate('Home');
+      }
   };
 
   const handleGoogleSignIn = async () => {
@@ -67,16 +77,24 @@ const Login = () => {
         const firebaseIdToken = await userCredential.user.getIdToken();
 
         // Dispatch the googleLogin thunk passing the firebase token and database context.
-        dispatch(googleLogin({ firebaseIdToken, db }))
+        const usercred = dispatch(googleLogin({ firebaseIdToken, db }))
           .unwrap()
           .then(() => {
             Toasthelper.showSuccess('Google Login Successful');
-            navigation.navigate('Home');
+           
           })
         .catch((error) => {
           Toasthelper.showError('Google Login Failed', error.message);
         });
       }
+      // console.log("WEWEWEWEWEEWE", usercred.currentUser);
+      if (usercred.currentUser.isAdmin === true) {
+        navigation.navigate('Adminhome');
+      }
+      else{
+        navigation.navigate('Home');
+      }
+
       setIsSubmitting(false);
     } catch (error) {
       setIsSubmitting(false);

@@ -34,6 +34,7 @@ export const updateProfile = createAsyncThunk(
       formData.append('firstname', user.firstname);
       formData.append('lastname', user.lastname);
       formData.append('email', user.email);
+      
       if (user.address) {
         formData.append('address', JSON.stringify(user.address));
       }
@@ -41,6 +42,15 @@ export const updateProfile = createAsyncThunk(
         formData.append('phone', user.phone);
       }
 
+      // Append image file if available
+      if (user.image && user.image.url) {
+        const localUri = user.image.url;
+        const filename = localUri.split('/').pop();
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : `image`;
+        formData.append('image', { uri: localUri, name: filename, type });
+      }
+      
       const res = await fetch(`${apiURL}/api/auth/update-profile`, {
         method: 'PUT',
         body: formData,
@@ -59,6 +69,7 @@ export const updateProfile = createAsyncThunk(
     }
   }
 );
+
 
 
 
