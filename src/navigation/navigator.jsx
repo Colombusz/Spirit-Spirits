@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Provider as PaperProvider } from 'react-native-paper';
+import { useSelector } from 'react-redux';
 
 // Screens
-import HomeScreen from '../screens/admin/index';
+import HomeIndex from '../screens/admin/index';
 import CreateLiquor from '../screens/admin/create';
 import AdminOrders from '../screens/admin/orders';
 import Login from '../screens/common/login';
@@ -17,52 +18,34 @@ import Account from '../screens/user/account';
 import Details from '../screens/product/details';
 import Cart from '../screens/product/cart';
 import Checkout from '../screens/product/checkout';
+import UserOrders from '../screens/user/orders';
 
 // Drawers
 import AppDrawer from '../components/common/appdrawer';
 import AdminAppDrawer from '../components/admin/navbar';
 
-// Utils
-import { getUserCredentials } from '../utils/userStorage';
-
 const Stack = createStackNavigator();
 
 const Navigator = () => {
   const [drawerVisible, setDrawerVisible] = useState(false);
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
 
-  // Load user data once on mount
-  useEffect(() => {
-    const fetchUserData = async () => {
-      const userData = await getUserCredentials();
-      setUser(userData);
-      setLoading(false);
-    };
+  // Get user from Redux auth state
+  const user = useSelector((state) => state.auth.user);
 
-    fetchUserData();
-  }, []);
-
-  const commonScreens = (
-    <>
-      <Stack.Screen name="About" component={About} />
-      <Stack.Screen name="Login" component={Login} />
-      <Stack.Screen name="Signup" component={Signup} />
-      <Stack.Screen name="Home" component={Home} />
-      <Stack.Screen name="Account" component={Account} />
-      <Stack.Screen name="Details" component={Details} />
-      <Stack.Screen name="Cart" component={Cart} />
-      <Stack.Screen name="Checkout" component={Checkout} />
-    </>
-  );
-
-  if (loading) return null; // or a loading spinner
+  // If the auth state is still undefined (e.g., during startup) show a loader.
+  if (user === undefined) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#000" />
+      </View>
+    );
+  }
 
   return (
     <PaperProvider>
       <NavigationContainer>
         <View style={{ flex: 1 }}>
-          {/* Show floating menu button only when user is ready */}
+          {/* Floating menu button */}
           <TouchableOpacity
             style={styles.floatingButton}
             onPress={() => setDrawerVisible(true)}
@@ -70,20 +53,31 @@ const Navigator = () => {
             <Ionicons name="menu" size={30} color="#000" />
           </TouchableOpacity>
 
+          {/* Stack Navigator */}
           <Stack.Navigator
             initialRouteName={user?.isAdmin ? 'Adminhome' : 'Home'}
             screenOptions={{ headerShown: false }}
           >
             {user?.isAdmin && (
               <>
-                <Stack.Screen name="Adminhome" component={HomeScreen} />
+                <Stack.Screen name="Adminhome" component={HomeIndex} />
                 <Stack.Screen name="CreateLiquor" component={CreateLiquor} />
                 <Stack.Screen name="AdminOrders" component={AdminOrders} />
               </>
             )}
-            {commonScreens}
+
+            <Stack.Screen name="Home" component={Home} />
+            <Stack.Screen name="About" component={About} />
+            <Stack.Screen name="Login" component={Login} />
+            <Stack.Screen name="Signup" component={Signup} />
+            <Stack.Screen name="Account" component={Account} />
+            <Stack.Screen name="Details" component={Details} />
+            <Stack.Screen name="Cart" component={Cart} />
+            <Stack.Screen name="Checkout" component={Checkout} />
+            <Stack.Screen name="UserOrders" component={UserOrders} />
           </Stack.Navigator>
 
+          {/* Drawer Overlay */}
           {drawerVisible && (
             <View style={styles.drawerOverlay}>
               {user?.isAdmin ? (

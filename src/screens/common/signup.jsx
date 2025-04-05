@@ -34,11 +34,7 @@ const Signup = () => {
     .unwrap()
     .then((user) => {
       console.log('Signup successful:', user);
-      if (user.isAdmin) {
-        navigation.navigate('Adminhome');
-      } else {
-        navigation.navigate('Home');
-      }
+      navigation.navigate('Login');
     })
     .catch((error) => {
       console.error('Signup error:', error);

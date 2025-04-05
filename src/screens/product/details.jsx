@@ -121,6 +121,21 @@ const Details = () => {
           <Paragraph style={styles.reviewText}>
             Average Rating: {currentLiquor.rating || 0} ★ ({currentLiquor.numReviews || 0} Reviews)
           </Paragraph>
+
+          {currentLiquor.reviews && currentLiquor.reviews.length > 0 ? (
+            currentLiquor.reviews.map((review, index) => (
+              <View key={index} style={styles.reviewItem}>
+                <Paragraph style={styles.reviewRating}>Rating: {review.rating} ★</Paragraph>
+                <Paragraph style={styles.reviewComment}>{review.comment}</Paragraph>
+                {review.user && review.user.name && (
+                  <Paragraph style={styles.reviewUser}>By: {review.user.name}</Paragraph>
+                )}
+              </View>
+            ))
+          ) : (
+            <Paragraph style={styles.reviewComment}>No reviews yet.</Paragraph>
+          )}
+
         </ScrollView>
 
         {/* Sticky Footer with buttons */}
@@ -260,5 +275,30 @@ const styles = StyleSheet.create({
   footerLabel: {
     fontSize: 16, // adjust text size as needed
     fontWeight: 'bold',
+  },
+  reviewItem: {
+    marginVertical: spacing.small,
+    padding: spacing.small,
+    backgroundColor: colors.ivory1,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  reviewRating: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: colors.primary,
+  },
+  reviewComment: {
+    fontSize: 14,
+    color: colors.text,
+    marginVertical: spacing.small,
+  },
+  reviewUser: {
+    fontSize: 12,
+    color: colors.placeholder,
+    fontStyle: 'italic',
   },
 });
