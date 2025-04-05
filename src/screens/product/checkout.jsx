@@ -17,10 +17,16 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { globalStyles, spacing, colors } from '../../components/common/theme';
 import { getUserCredentials } from '../../utils/userStorage';
 import * as ImagePicker from 'expo-image-picker';
+import { useDispatch } from 'react-redux';
+import { createOrder } from '../../redux/actions/orderAction';
+import Toast from 'react-native-toast-message';
+import { useAsyncSQLiteContext } from '../../utils/asyncSQliteProvider';
 
 const Checkout = () => {
+  const dispatch = useDispatch();
   const navigation = useNavigation();
   const { params } = useRoute();
+  const db = useAsyncSQLiteContext();
   const [shippingAddress, setShippingAddress] = useState({
     street: '',
     city: '',
@@ -103,6 +109,51 @@ const Checkout = () => {
       const uri = result.assets[0].uri;
       setProofOfPayment(uri);
       setProofModalVisible(false);
+    }
+  };
+
+  const handlePlaceOrder = async () => {
+    try {
+      const user = await getUserCredentials();
+      console.log('User:', user);
+  
+      if (!user || !user._id) {
+        Alert.alert('Error', 'User information is missing. Please log in again.');
+        return;
+      }
+  
+      const orderDetails = {
+        userId: user._id, 
+        shippingAddress,
+        paymentMethod,
+        selectedProducts,
+        subtotal,
+        vat,
+        shippingFee,
+        total,
+        ...(paymentMethod === 'GCash' && { proofOfPayment }), // Include proofOfPayment only if paymentMethod is GCash
+      };
+  
+      console.log('Placing Order');
+      console.log('Order Details:', orderDetails);
+  
+      dispatch(createOrder({ orderDetails, db }))
+        .unwrap()
+        .then((order) => {
+          console.log('Order placed successfully:', order);
+          Toast.show({
+            type: 'success',
+            text1: 'Order placed successfully!',
+            text2: 'Thank you for your order.',
+          });
+          navigation.navigate('Home');
+        })
+        .catch((error) => {
+          Alert.alert('Order failed', error.message || 'An error occurred while placing the order 001.');
+        });
+    } catch (error) {
+      console.error('Error placing order:', error);
+      Alert.alert('Error', 'An error occurred while placing the order 002.');
     }
   };
 
@@ -227,7 +278,7 @@ const Checkout = () => {
           </Button>
           <Button
             mode="contained"
-            onPress={() => console.log('Proceed to payment')}
+            onPress={handlePlaceOrder}
             style={[styles.payButton, styles.checkoutButton]}
             labelStyle={styles.payButtonLabel}
           >
