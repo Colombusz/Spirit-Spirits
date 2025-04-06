@@ -80,6 +80,32 @@ export const updateProfile = createAsyncThunk(
   }
 );
 
+export const uploadNotifToken = createAsyncThunk(
+  'user/uploadNotifToken',
+  async ({ token, id }, thunkAPI) => {
+    console.log('Uploading token:', token, 'for user ID:', id);
+    try {
+      const res = await fetch(`${apiURL}/api/auth/store-fcm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, id }),
+      });
+      const data = await res.json();
+      console.log('Backend response:', data);
+      if (data.success) {
+        console.log('Token successfully uploaded to backend.');
+        return data.token;
+      } else {
+        console.error('Backend error:', data.message);
+        return thunkAPI.rejectWithValue(data.message);
+      }
+    } catch (error) {
+      console.error('Error uploading token:', error.message);
+      return thunkAPI.rejectWithValue(error.message);
+    }
+  }
+);
+
 
 
 
