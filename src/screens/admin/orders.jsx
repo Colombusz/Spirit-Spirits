@@ -1,4 +1,3 @@
-// AdminOrders.jsx
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, FlatList, Alert, ActivityIndicator, Image, ScrollView } from 'react-native';
 import { Appbar, Card, Title, Paragraph, Button, Menu, Divider, Chip, Text, Portal, Dialog } from 'react-native-paper';
@@ -7,6 +6,7 @@ import { fetchOrders, updateOrderStatus } from '../../redux/actions/orderAction'
 import Toast from 'react-native-toast-message';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors, spacing } from '../../components/common/theme.js';
+import { useAsyncSQLiteContext } from '../../utils/asyncSQliteProvider';
 
 const OrderStatusBadge = ({ status }) => {
   const getStatusColor = () => {
@@ -39,18 +39,22 @@ const AdminOrders = () => {
   // For viewing order details
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [detailsVisible, setDetailsVisible] = useState(false);
+  
+  // Get the db instance from your SQLite provider
+  const db = useAsyncSQLiteContext();
 
   useEffect(() => {
     loadOrders();
-  }, [dispatch]);
+  }, [dispatch, db]);
 
   const loadOrders = () => {
-    dispatch(fetchOrders());
+    // Pass the db instance as part of the payload
+    dispatch(fetchOrders({ db }));
   };
 
   const handleRefresh = () => {
     setRefreshing(true);
-    dispatch(fetchOrders())
+    dispatch(fetchOrders({ db }))
       .finally(() => setRefreshing(false));
   };
 
@@ -59,7 +63,8 @@ const AdminOrders = () => {
   };
 
   const handleStatusUpdate = (orderId, newStatus) => {
-    dispatch(updateOrderStatus({ orderId, newStatus }))
+    // Pass the db instance in the updateOrderStatus thunk
+    dispatch(updateOrderStatus({ orderId, newStatus, db }))
       .unwrap()
       .then((updatedOrder) => {
         Toast.show({
@@ -306,15 +311,15 @@ const AdminOrders = () => {
                     
                     {/* User review section */}
                     {item.review ? (
-                    <View style={styles.reviewContainer}>
+                      <View style={styles.reviewContainer}>
                         <Icon name="star" size={14} color={colors.bronzeShade4} />
                         <Text style={styles.itemReview}>"{item.review.comment}"</Text>
-                    </View>
+                      </View>
                     ) : (
-                    <View style={styles.reviewContainer}>
+                      <View style={styles.reviewContainer}>
                         <Icon name="star-outline" size={14} color={colors.bronzeShade3} />
                         <Text style={styles.noReview}>No review available</Text>
-                    </View>
+                      </View>
                     )}
                   </View>
                 ))}
@@ -520,48 +525,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.medium,
     backgroundColor: colors.bronzeShade4,
   },
-  // Styles for modal order details
-  modalLabel: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginTop: spacing.small,
-    color: colors.bronzeShade7,
-  },
-  modalValue: {
-    fontSize: 14,
-    marginBottom: spacing.small,
-    color: colors.bronzeShade8,
-  },
-  proofImage: {
-    width: '100%',
-    height: 200,
-    marginVertical: spacing.medium,
-  },
-  itemRow: {
-    marginBottom: spacing.small,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.bronzeShade2,
-    paddingBottom: spacing.small,
-  },
-  itemText: {
-    fontSize: 14,
-    color: colors.bronzeShade8,
-  },
-  itemSubText: {
-    fontSize: 12,
-    color: colors.bronzeShade6,
-    marginLeft: spacing.small,
-  },
-  itemReview: {
-    fontSize: 12,
-    color: colors.bronzeShade5,
-    marginLeft: spacing.small,
-    fontStyle: 'italic',
-  },
-  // Add these styles to your StyleSheet
-
-// Modal and dialog styles
-dialog: {
+  dialog: {
     maxWidth: '90%',
     width: '90%',
     borderRadius: 12,
@@ -578,7 +542,7 @@ dialog: {
     justifyContent: 'center',
   },
   scrollArea: {
-    maxHeight: '80%', // Limit height to ensure dialog actions are visible
+    maxHeight: '80%',
   },
   modalScrollContent: {
     paddingHorizontal: spacing.small,
@@ -708,6 +672,45 @@ dialog: {
     backgroundColor: colors.bronzeShade5,
     borderRadius: 8,
     paddingHorizontal: spacing.medium,
+  },
+  // Modal and dialog styles
+  starsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  modalProductInfo: {
+    marginBottom: spacing.medium,
+    alignItems: 'center',
+  },
+  modalProductName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.bronzeShade8,
+    textAlign: 'center',
+  },
+  ratingLabel: {
+    fontSize: 16,
+    color: colors.bronzeShade7,
+    marginBottom: spacing.small,
+  },
+  ratingContainer: {
+    alignItems: 'center',
+    marginBottom: spacing.medium,
+  },
+  textInput: {
+    backgroundColor: colors.ivory1,
+    marginVertical: spacing.small,
+  },
+  reviewModalActions: {
+    paddingHorizontal: spacing.medium,
+    justifyContent: 'space-between',
+  },
+  cancelButton: {
+    borderRadius: 8,
+  },
+  submitButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 8,
   },
 });
 
