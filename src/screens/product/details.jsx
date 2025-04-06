@@ -190,7 +190,7 @@ const Details = () => {
                 <Paragraph style={styles.brandText}>{currentLiquor.brand}</Paragraph>
               </View>
               <View style={styles.priceContainer}>
-                <Text style={styles.price}>${currentLiquor.price}</Text>
+                <Text style={styles.price}>₱{currentLiquor.price}</Text>
               </View>
             </View>
 

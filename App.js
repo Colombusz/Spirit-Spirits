@@ -19,7 +19,7 @@ export default function App() {
         <AsyncSQLiteProvider databaseName="spirits.db" onInit={migrateDbIfNeeded}>
           <PersistentLogin />
           <NotificationHandler />
-          <Navigator />
+          <Navigator/>
           <Toast />
         </AsyncSQLiteProvider>
       </Provider>
