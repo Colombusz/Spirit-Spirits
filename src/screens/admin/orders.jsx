@@ -304,17 +304,17 @@ const AdminOrders = () => {
                       </View>
                     )}
                     
-                    {/* User review section with improved styling */}
+                    {/* User review section */}
                     {item.review ? (
-                      <View style={styles.reviewContainer}>
+                    <View style={styles.reviewContainer}>
                         <Icon name="star" size={14} color={colors.bronzeShade4} />
-                        <Text style={styles.itemReview}>"{item.review}"</Text>
-                      </View>
+                        <Text style={styles.itemReview}>"{item.review.comment}"</Text>
+                    </View>
                     ) : (
-                      <View style={styles.reviewContainer}>
+                    <View style={styles.reviewContainer}>
                         <Icon name="star-outline" size={14} color={colors.bronzeShade3} />
                         <Text style={styles.noReview}>No review available</Text>
-                      </View>
+                    </View>
                     )}
                   </View>
                 ))}
