@@ -17,9 +17,9 @@ const PersistentLogin = () => {
         if (verifyUser.fulfilled.match(resultAction)) {
           console.log('User verified persistently:', resultAction.payload);
         } else {
-          console.error('Persistent login failed:', resultAction.payload);
+          console.log('Persistent login failed:', resultAction.payload);
           logoutUser(db);
-          Toasthelper.showError('Session expired', 'Please log in again.');
+          Toasthelper.showError('Session Expired', 'Please log in again.');
         }
       };
   
