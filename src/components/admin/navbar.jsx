@@ -1,11 +1,15 @@
-// AppDrawer.jsx
+// AdminAppDrawer.jsx
 import React, { useState, useCallback } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Dimensions } from 'react-native';
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
-import { Avatar, Title, Caption, Paragraph, IconButton } from 'react-native-paper';
+import { Avatar, Title, Caption, Paragraph, IconButton, Divider } from 'react-native-paper';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { getUserCredentials } from '../../utils/userStorage';
+import defaultAvatar from '../../../assets/ghost.png';
+import { colors, spacing, fonts } from '../common/theme';
+
+const SCREEN_HEIGHT = Dimensions.get('window').height;
 
 const AdminAppDrawer = ({ closeDrawer }) => {
   const navigation = useNavigation();
@@ -18,7 +22,6 @@ const AdminAppDrawer = ({ closeDrawer }) => {
         try {
           const userData = await getUserCredentials();
           console.log('Retrieved user from AsyncStorage:', userData);
-
           setUser(userData);
         } catch (error) {
           console.error('Error fetching user:', error);
@@ -29,122 +32,239 @@ const AdminAppDrawer = ({ closeDrawer }) => {
     }, [])
   );
 
-  return (
-    <DrawerContentScrollView>
-      <View style={styles.drawerContent}>
-        {/* Close Button */}
-        <IconButton
-          icon="close"
-          onPress={closeDrawer}
-          style={{ alignSelf: 'flex-end' }}
+  const renderIcon = (name, focused) => {
+    return (
+      <View style={styles.iconContainer}>
+        <Ionicons 
+          name={name} 
+          color={focused ? colors.primary : colors.bronzeShade7} 
+          size={24} 
         />
-
-        {/* USER INFO SECTION */}
-        <View style={styles.userInfoSection}>
-          <View style={{ flexDirection: 'row', marginTop: 15 }}>
-            <Avatar.Image
-              source={{
-                uri: user?.image_url || 'https://via.placeholder.com/150',
-              }}
-              size={70}
-            />
-            <View style={{ marginLeft: 15, flexDirection: 'column' }}>
-              <Title style={styles.title}>{user?.firstname || 'Guest'}</Title>
-              <Caption style={styles.caption}>
-                @{user?.username || 'guest_user'}
-              </Caption>
-            </View>
-          </View>
-
-          <View style={styles.row}>
-            <View style={styles.section}>
-              <Paragraph style={[styles.paragraph, styles.caption]}>
-                80
-              </Paragraph>
-              <Caption style={styles.caption}>Following</Caption>
-            </View>
-            <View style={styles.section}>
-              <Paragraph style={[styles.paragraph, styles.caption]}>
-                100
-
-              </Paragraph>
-              <Caption style={styles.caption}>Followers</Caption>
-            </View>
-          </View>
-        </View>
-
-        {/* NAVIGATION ITEMS */}
-        <View style={styles.drawerSection}>
-         
-          <DrawerItem
-            icon={({ color, size }) => (
-              <Ionicons name="card-outline" color={color} size={size} />
-            )}
-            label="Signup: testing"
-            onPress={() => {
-              navigation.navigate('Signup');
-              closeDrawer();
-            }}
-          />
-          <DrawerItem
-            icon={({ color, size }) => (
-              <Ionicons name="person-outline" color={color} size={size} />
-            )}
-            label="Account"
-            onPress={() => {
-              navigation.navigate('Account');
-              closeDrawer();
-            }}
-          />
-          <DrawerItem
-            icon={({ color, size }) => (
-              <Ionicons name="clipboard-outline" color={color} size={size} />
-            )}
-            label="Orders"
-            onPress={() => {
-              navigation.navigate('AdminOrders');
-              closeDrawer();
-            }}
-          />
-        </View>
       </View>
-    </DrawerContentScrollView>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <DrawerContentScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.drawerContent}>
+          {/* Close Button */}
+          <IconButton
+            icon="close"
+            color={colors.bronzeShade7}
+            size={28}
+            onPress={closeDrawer}
+            style={styles.closeButton}
+          />
+
+          {/* USER INFO SECTION */}
+          <View style={styles.userInfoSection}>
+            <View style={styles.avatarContainer}>
+              <Avatar.Image
+                source={
+                  user?.image?.url
+                    ? { uri: user.image.url }
+                    : defaultAvatar
+                }
+                size={80}
+                style={styles.avatar}
+              />
+              <View style={styles.userTextContainer}>
+                <Title style={styles.title}>{user?.firstname || 'Admin'}</Title>
+                <Caption style={styles.caption}>
+                  @{user?.username || 'admin_user'}
+                </Caption>
+                <View style={styles.adminBadge}>
+                  <Caption style={styles.adminText}>Administrator</Caption>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          <Divider style={styles.divider} />
+
+          {/* NAVIGATION ITEMS */}
+          <View style={styles.drawerSection}>
+            <DrawerItem
+              icon={({ focused }) => renderIcon('grid-outline', focused)}
+              label="Dashboard"
+              labelStyle={styles.drawerLabel}
+              activeBackgroundColor={`${colors.ivory4}CC`}
+              activeTintColor={colors.primary}
+              inactiveTintColor={colors.bronzeShade8}
+              onPress={() => {
+                navigation.navigate('Adminhome');
+                closeDrawer();
+              }}
+            />
+            
+            <DrawerItem
+              icon={({ focused }) => renderIcon('person-outline', focused)}
+              label="Account"
+              labelStyle={styles.drawerLabel}
+              activeBackgroundColor={`${colors.ivory4}CC`}
+              activeTintColor={colors.primary}
+              inactiveTintColor={colors.bronzeShade8}
+              onPress={() => {
+                navigation.navigate('Account');
+                closeDrawer();
+              }}
+            />
+            
+            <DrawerItem
+              icon={({ focused }) => renderIcon('clipboard-outline', focused)}
+              label="Orders"
+              labelStyle={styles.drawerLabel}
+              activeBackgroundColor={`${colors.ivory4}CC`}
+              activeTintColor={colors.primary}
+              inactiveTintColor={colors.bronzeShade8}
+              onPress={() => {
+                navigation.navigate('AdminOrders');
+                closeDrawer();
+              }}
+            />
+            
+
+          </View>
+          
+          <Divider style={styles.divider} />
+
+          {/* APP VERSION FOOTER */}
+          <View style={styles.footer}>
+            <Caption style={styles.versionText}>Admin Panel v1.0.0</Caption>
+          </View>
+        </View>
+      </DrawerContentScrollView>
+    </View>
   );
 };
 
 export default AdminAppDrawer;
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 240, 0.85)', // Semi-transparent ivory background
+  },
+  scrollContent: {
+    minHeight: SCREEN_HEIGHT,
+  },
   drawerContent: {
     flex: 1,
+    paddingTop: 20,
+    paddingBottom: 40,
+  },
+  closeButton: {
+    alignSelf: 'flex-end',
+    margin: spacing.small,
+    backgroundColor: `${colors.ivory3}CC`,
   },
   userInfoSection: {
-    paddingLeft: 20,
-    marginBottom: 10,
+    paddingHorizontal: spacing.medium,
+    marginBottom: spacing.medium,
+  },
+  avatarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.medium,
+  },
+  avatar: {
+    backgroundColor: colors.ivory4,
+    borderWidth: 2,
+    borderColor: colors.bronzeShade5,
+  },
+  userTextContainer: {
+    marginLeft: spacing.medium,
+    flexDirection: 'column',
   },
   title: {
-    fontSize: 16,
-    marginTop: 3,
+    fontSize: 18,
     fontWeight: 'bold',
+    color: colors.bronzeShade7,
+    fontFamily: fonts.medium,
   },
   caption: {
     fontSize: 14,
-    lineHeight: 14,
+    color: colors.bronzeShade5,
+    fontFamily: fonts.regular,
   },
-  row: {
-    marginTop: 20,
-    flexDirection: 'row',
+  adminBadge: {
+    backgroundColor: colors.bronzeShade4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    marginTop: 4,
+    alignSelf: 'flex-start',
   },
-  section: {
+  adminText: {
+    color: colors.ivory2,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  statsContainer: {
     flexDirection: 'row',
+    marginTop: spacing.medium,
+    backgroundColor: `${colors.ivory4}99`,
+    borderRadius: 12,
+    padding: spacing.medium,
+    justifyContent: 'space-around',
+  },
+  statItem: {
     alignItems: 'center',
-    marginRight: 15,
+    flex: 1,
   },
-  paragraph: {
+  statNumber: {
+    fontSize: 18,
     fontWeight: 'bold',
-    marginRight: 3,
+    color: colors.bronzeShade6,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: colors.bronzeShade5,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.bronzeShade3,
+    opacity: 0.3,
+    marginVertical: spacing.medium,
+    marginHorizontal: spacing.medium,
+  },
+  dividerVertical: {
+    width: 1,
+    backgroundColor: colors.bronzeShade3,
+    opacity: 0.5,
+    height: '100%',
   },
   drawerSection: {
-    marginTop: 15,
+    marginTop: spacing.small,
+  },
+  adminSection: {
+    marginTop: spacing.small,
+  },
+  drawerLabel: {
+    fontSize: 16,
+    fontFamily: fonts.regular,
+    fontWeight: '500',
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: `${colors.ivory3}CC`,
+  },
+  footer: {
+    marginTop: 'auto',
+    padding: spacing.medium,
+    alignItems: 'center',
+  },
+  versionText: {
+    fontSize: 12,
+    color: colors.bronzeShade4,
+    fontFamily: fonts.light,
   },
 });
