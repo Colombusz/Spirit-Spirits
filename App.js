@@ -8,6 +8,7 @@ import { Provider } from 'react-redux';
 import { AsyncSQLiteProvider } from './src/utils/asyncSQliteProvider';
 import { migrateDbIfNeeded } from './src/utils/storage';
 import Toast from 'react-native-toast-message';
+import PersistentLogin from './src/utils/persistentLogin';
 
 import NotificationHandler from './src/components/NotificationHandler'; // we’ll create this next
 
@@ -16,6 +17,7 @@ export default function App() {
     <SafeAreaProvider>
       <Provider store={store}>
         <AsyncSQLiteProvider databaseName="spirits.db" onInit={migrateDbIfNeeded}>
+          <PersistentLogin />
           <NotificationHandler />
           <Navigator />
           <Toast />
