@@ -215,8 +215,19 @@ const handleSaveAllChanges = async () => {
 
   // Handle checkout by logging selected products
   const handleCheckout = () => {
-    const selectedProducts = items.filter(item => selectedItems[item.productId]);
     console.log('Selected products for checkout:', selectedProducts);
+    if (!items.length) {
+      Toasthelper.showError('Empty Cart', 'Please add items to your cart before proceeding to checkout.');
+      return;
+    }
+
+    const selectedProducts = items.filter(item => selectedItems[item.productId]);
+
+    if (!selectedProducts.length) {
+      Toasthelper.showError('No items selected', 'Please select items to proceed to checkout.');
+      return;
+    }
+
     navigation.navigate('Checkout', { selectedProducts });
   };
 
