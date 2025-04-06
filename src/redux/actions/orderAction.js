@@ -86,6 +86,7 @@ export const fetchOrders = createAsyncThunk(
 export const updateOrderStatus = createAsyncThunk(
   'order/updateOrderStatus',
   async ({ orderId, newStatus, db }, thunkAPI) => {
+    console.log('Updating order status:', orderId, newStatus);
     try {
       const token = await getToken(db);
       const config = {
