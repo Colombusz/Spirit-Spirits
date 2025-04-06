@@ -146,7 +146,7 @@ const Signup = () => {
       .then((user) => {
         console.log('Signup successful:', user);
         Alert.alert(
-          'Welcome to Spirits & Spirits!', 
+          'Welcome to Spirit & Spirits!', 
           'Account created successfully. Please log in with your credentials.',
           [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
         );
@@ -203,7 +203,7 @@ const Signup = () => {
     >
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.headerContainer}>
-          <Text style={styles.logo}>Spirits & Spirits</Text>
+          <Text style={styles.logo}>Spirit & Spirits</Text>
           <Text style={styles.subtitle}>Create Your Account</Text>
         </View>
 

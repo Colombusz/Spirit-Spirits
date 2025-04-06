@@ -9,6 +9,8 @@ import { colors, spacing, globalStyles } from '../../components/common/theme';
 import { fetchCartItems, removeCartItem, updateCartItemQuantity } from '../../redux/actions/cartAction';
 import { getUserCredentials } from '../../utils/userStorage';
 import { useNavigation } from '@react-navigation/native';
+import Toast from 'react-native-toast-message';
+import Toasthelper from '../../components/common/toasthelper';
 
 const Cart = () => {
   const dispatch = useDispatch();
@@ -27,7 +29,8 @@ const Cart = () => {
       try {
         const user = await getUserCredentials();
         if (!user) {
-          console.error('User not found in AsyncStorage');
+          // console.error('User not found in AsyncStorage');
+          Toasthelper.showError('User not found', 'Please log in again.');
           return;
         }
         setUserId(user._id);
@@ -212,8 +215,19 @@ const handleSaveAllChanges = async () => {
 
   // Handle checkout by logging selected products
   const handleCheckout = () => {
-    const selectedProducts = items.filter(item => selectedItems[item.productId]);
     console.log('Selected products for checkout:', selectedProducts);
+    if (!items.length) {
+      Toasthelper.showError('Empty Cart', 'Please add items to your cart before proceeding to checkout.');
+      return;
+    }
+
+    const selectedProducts = items.filter(item => selectedItems[item.productId]);
+
+    if (!selectedProducts.length) {
+      Toasthelper.showError('No items selected', 'Please select items to proceed to checkout.');
+      return;
+    }
+
     navigation.navigate('Checkout', { selectedProducts });
   };
 

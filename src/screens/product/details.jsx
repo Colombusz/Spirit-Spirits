@@ -51,7 +51,8 @@ const Details = () => {
     try {
       const user = await getUserCredentials();
       if (!user) {
-        console.error('User not found in AsyncStorage');
+        // console.error('User not found in AsyncStorage');
+        console.log('User not found in AsyncStorage');
         Toasthelper.showError('Please log in to add items to your cart.');
         navigation.navigate('Login');
         return;
@@ -69,7 +70,8 @@ const Details = () => {
     try {
       const user = await getUserCredentials();
       if (!user) {
-        console.error('User not found in AsyncStorage');
+        // console.error('User not found in AsyncStorage');
+        console.log('User not found in AsyncStorage');
         Toasthelper.showError('Please log in to view your cart.');
         navigation.navigate('Login');
         return;
@@ -187,19 +189,14 @@ const Details = () => {
             <View style={styles.productHeaderRow}>
               <View style={styles.productTitleContainer}>
                 <Title style={styles.productName}>{currentLiquor.name}</Title>
-                <Paragraph style={styles.brandText}>{currentLiquor.brand}</Paragraph>
+                <Paragraph style={styles.brandText}>Brand: {currentLiquor.brand}</Paragraph>
               </View>
               <View style={styles.priceContainer}>
-                <Text style={styles.price}>${currentLiquor.price}</Text>
+                <Text style={styles.price}>₱{currentLiquor.price}</Text>
               </View>
             </View>
 
-            <View style={styles.ratingContainer}>
-              {renderStars(currentLiquor.rating || 0)}
-              <Text style={styles.reviewCount}>
-                ({currentLiquor.numReviews || 0} {currentLiquor.numReviews === 1 ? 'Review' : 'Reviews'})
-              </Text>
-            </View>
+     
 
             <View style={styles.categoryBadge}>
               <Text style={styles.categoryText}>{currentLiquor.category}</Text>

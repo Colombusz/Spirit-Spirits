@@ -7,6 +7,8 @@ import styles from './createStyle';
 import { useNavigation } from '@react-navigation/native';
 import { updateLiquorById } from '../../redux/actions/liquorAction';
 import { useAsyncSQLiteContext } from '../../utils/asyncSQliteProvider';
+import Toasthelper from '../../components/common/toasthelper';
+import Toast from 'react-native-toast-message';
 
 const bronzeTheme = {
   ...DefaultTheme,
@@ -161,7 +163,7 @@ export default function EditLiquor({ route }) {
       } else {
         // Success case
         setSubmitted(true);
-        alert('Liquor updated successfully!');
+        Toasthelper.showSuccess('Success', 'Liquor updated successfully!');
         navigation.goBack(); // Optionally navigate back
       }
     } catch (error) {

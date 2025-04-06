@@ -9,6 +9,7 @@ import {
   Modal, 
   TouchableOpacity, 
   Alert, 
+  ActivityIndicator,
   Text 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -36,6 +37,7 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState('');
   const [proofOfPayment, setProofOfPayment] = useState(null);
   const [proofModalVisible, setProofModalVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Function to fetch and set the saved address from AsyncStorage.
   const handleUseExistingAddress = async () => {
@@ -114,11 +116,13 @@ const Checkout = () => {
 
   const handlePlaceOrder = async () => {
     try {
+      setIsLoading(true);
       const user = await getUserCredentials();
       console.log('User:', user);
   
       if (!user || !user._id) {
         Alert.alert('Error', 'User information is missing. Please log in again.');
+        setIsLoading(false);
         return;
       }
   
@@ -150,10 +154,14 @@ const Checkout = () => {
         })
         .catch((error) => {
           Alert.alert('Order failed', error.message || 'An error occurred while placing the order 001.');
+        })
+        .finally(() => {
+          setIsLoading(false);
         });
     } catch (error) {
       console.error('Error placing order:', error);
       Alert.alert('Error', 'An error occurred while placing the order 002.');
+      setIsLoading(false);
     }
   };
 
@@ -281,10 +289,18 @@ const Checkout = () => {
             onPress={handlePlaceOrder}
             style={[styles.payButton, styles.checkoutButton]}
             labelStyle={styles.payButtonLabel}
+            disabled={isLoading}
           >
-            Place Order
+            {isLoading ? 'Placing Order...' : 'Place Order'}
           </Button>
         </View>
+
+        {/* Loader */}
+        {isLoading && (
+          <View style={styles.loaderContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        )}
 
         {/* Modal for Proof of Payment Image Picker */}
         <Modal
@@ -449,6 +465,17 @@ const styles = StyleSheet.create({
     margin: 20,
     padding: 20,
     borderRadius: 10,
+  },
+  loaderContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
+    zIndex: 10,
   },
   modalTitle: {
     fontSize: 20,

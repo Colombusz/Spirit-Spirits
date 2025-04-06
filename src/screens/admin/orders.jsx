@@ -36,9 +36,11 @@ const AdminOrders = () => {
   const { orders, loading, error } = useSelector((state) => state.order);
   const [menuVisible, setMenuVisible] = useState({});
   const [refreshing, setRefreshing] = useState(false);
-  // For viewing order details
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [detailsVisible, setDetailsVisible] = useState(false);
+  
+  // New filter state
+  const [filterStatus, setFilterStatus] = useState("All");
   
   // Get the db instance from your SQLite provider
   const db = useAsyncSQLiteContext();
@@ -48,7 +50,6 @@ const AdminOrders = () => {
   }, [dispatch, db]);
 
   const loadOrders = () => {
-    // Pass the db instance as part of the payload
     dispatch(fetchOrders({ db }));
   };
 
@@ -63,7 +64,6 @@ const AdminOrders = () => {
   };
 
   const handleStatusUpdate = (orderId, newStatus) => {
-    // Pass the db instance in the updateOrderStatus thunk
     dispatch(updateOrderStatus({ orderId, newStatus, db }))
       .unwrap()
       .then((updatedOrder) => {
@@ -83,7 +83,7 @@ const AdminOrders = () => {
 
   // Allowed status transitions
   const allowedNextStatus = {
-    Pending: ['Processing'],
+    Pending: ['Processing', 'Cancelled'],
     Processing: ['Shipped'],
     Shipped: ['Delivered'],
   };
@@ -107,7 +107,7 @@ const AdminOrders = () => {
   // Render individual order card
   const renderOrder = ({ item }) => {
     const availableStatuses = allowedNextStatus[item.status] || [];
-    const truncatedId = item._id.slice(-6); // Show only last 6 characters of ID
+    const truncatedId = item._id.slice(-6);
     const formattedDate = new Date(item.createdAt).toLocaleDateString('en-US', {
       day: 'numeric',
       month: 'short',
@@ -309,7 +309,6 @@ const AdminOrders = () => {
                       </View>
                     )}
                     
-                    {/* User review section */}
                     {item.review ? (
                       <View style={styles.reviewContainer}>
                         <Icon name="star" size={14} color={colors.bronzeShade4} />
@@ -344,6 +343,42 @@ const AdminOrders = () => {
     </Portal>
   );
 
+  // Compute filtered orders based on the selected filter
+  const filteredOrders = filterStatus === "All" ? orders : orders.filter(order => order.status === filterStatus);
+
+  // Render the filter bar above the orders list
+  const renderFilterBar = () => {
+    const filterOptions = ["All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
+    return (
+      <View style={styles.filterBarWrapper}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          contentContainerStyle={styles.filterContainer}
+        >
+          {filterOptions.map(status => (
+            <Chip
+              key={status}
+              selected={filterStatus === status}
+              onPress={() => setFilterStatus(status)}
+              style={[
+                styles.filterChip,
+                filterStatus === status && styles.selectedFilterChip
+              ]}
+              selectedColor={colors.ivory1}
+              textStyle={[
+                styles.filterChipText,
+                filterStatus === status && styles.selectedFilterChipText
+              ]}
+            >
+              {status}
+            </Chip>
+          ))}
+        </ScrollView>
+      </View>
+    );
+  };
+
   const renderContent = () => {
     if (loading) {
       return (
@@ -372,20 +407,23 @@ const AdminOrders = () => {
     }
     
     return (
-      <FlatList
-        data={orders}
-        keyExtractor={(order) => order._id}
-        renderItem={renderOrder}
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={
-          <View style={styles.centerContainer}>
-            <Icon name="package-variant" size={48} color={colors.bronzeShade3} />
-            <Text style={styles.emptyText}>No orders found</Text>
-          </View>
-        }
-        onRefresh={handleRefresh}
-        refreshing={refreshing}
-      />
+      <>
+        {renderFilterBar()}
+        <FlatList
+          data={filteredOrders}
+          keyExtractor={(order) => order._id}
+          renderItem={renderOrder}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <View style={styles.centerContainer}>
+              <Icon name="package-variant" size={48} color={colors.bronzeShade3} />
+              <Text style={styles.emptyText}>No orders found</Text>
+            </View>
+          }
+          onRefresh={handleRefresh}
+          refreshing={refreshing}
+        />
+      </>
     );
   };
 
@@ -423,6 +461,39 @@ const styles = StyleSheet.create({
   appbarSubtitle: {
     color: colors.ivory2,
   },
+  // Enhanced filter bar styles
+  filterBarWrapper: {
+    backgroundColor: colors.ivory3,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  filterContainer: {
+    paddingHorizontal: spacing.medium,
+    paddingVertical: spacing.medium,
+    alignItems: 'center',
+  },
+  filterChip: {
+    marginRight: spacing.small,
+    backgroundColor: colors.ivory1,
+    borderWidth: 1,
+    borderColor: colors.bronzeShade3,
+    height: 36,
+  },
+  selectedFilterChip: {
+    backgroundColor: colors.bronzeShade5,
+    borderColor: colors.bronzeShade6,
+  },
+  filterChipText: {
+    color: colors.bronzeShade7,
+    fontWeight: '500',
+  },
+  selectedFilterChipText: {
+    color: colors.ivory1,
+    fontWeight: '700',
+  },
   listContent: {
     padding: spacing.medium,
     paddingBottom: spacing.large,
@@ -432,6 +503,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.ivory4,
     borderRadius: 12,
     overflow: 'hidden',
+    elevation: 3, // Increased elevation for better shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -672,45 +748,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bronzeShade5,
     borderRadius: 8,
     paddingHorizontal: spacing.medium,
-  },
-  // Modal and dialog styles
-  starsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  modalProductInfo: {
-    marginBottom: spacing.medium,
-    alignItems: 'center',
-  },
-  modalProductName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.bronzeShade8,
-    textAlign: 'center',
-  },
-  ratingLabel: {
-    fontSize: 16,
-    color: colors.bronzeShade7,
-    marginBottom: spacing.small,
-  },
-  ratingContainer: {
-    alignItems: 'center',
-    marginBottom: spacing.medium,
-  },
-  textInput: {
-    backgroundColor: colors.ivory1,
-    marginVertical: spacing.small,
-  },
-  reviewModalActions: {
-    paddingHorizontal: spacing.medium,
-    justifyContent: 'space-between',
-  },
-  cancelButton: {
-    borderRadius: 8,
-  },
-  submitButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 8,
   },
 });
 

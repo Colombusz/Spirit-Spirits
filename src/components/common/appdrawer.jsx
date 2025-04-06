@@ -11,8 +11,7 @@ import { colors, spacing, fonts } from './theme';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
-const AppDrawer = ({ closeDrawer }) => {
-  const navigation = useNavigation();
+const AppDrawer = ({ closeDrawer, navigation }) => {
   const [user, setUser] = useState(null);
 
   // Refresh user data every time the drawer is focused
@@ -180,6 +179,18 @@ const AppDrawer = ({ closeDrawer }) => {
                     closeDrawer();
                   }}
                 />
+                <DrawerItem
+                  icon={({ focused }) => renderIcon('alert-circle-outline', focused)}
+                  label="About"
+                  labelStyle={styles.drawerLabel}
+                  activeBackgroundColor={`${colors.ivory4}CC`}
+                  activeTintColor={colors.primary}
+                  inactiveTintColor={colors.bronzeShade8}
+                  onPress={() => {
+                    navigation.navigate('About');
+                    closeDrawer();
+                  }}
+                />
                 <Divider style={styles.divider} />
               </>
             )}
@@ -187,6 +198,7 @@ const AppDrawer = ({ closeDrawer }) => {
 
           {/* APP VERSION FOOTER */}
           <View style={styles.footer}>
+          <Caption style={styles.versionText}>Spirit & Spirits</Caption>
             <Caption style={styles.versionText}>App Version 1.0.0</Caption>
           </View>
         </View>
@@ -200,15 +212,18 @@ export default AppDrawer;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 240, 0.85)', // Semi-transparent ivory background
+    backgroundColor: 'rgba(255, 255, 240, 0)', // Semi-transparent ivory background
   },
   scrollContent: {
     minHeight: SCREEN_HEIGHT,
+    opacity: 0.9,
   },
   drawerContent: {
     flex: 1,
     paddingTop: 20,
     paddingBottom: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)', // Add semi-transparent background to the drawer content
+    borderRadius: 10,
   },
   closeButton: {
     alignSelf: 'flex-end',
