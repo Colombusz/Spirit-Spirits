@@ -83,7 +83,7 @@ const AdminOrders = () => {
 
   // Allowed status transitions
   const allowedNextStatus = {
-    Pending: ['Processing'],
+    Pending: ['Processing', 'Cancelled'],
     Processing: ['Shipped'],
     Shipped: ['Delivered'],
   };
