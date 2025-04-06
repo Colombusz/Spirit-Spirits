@@ -20,6 +20,7 @@ import { colors, spacing, globalStyles } from '../../components/common/theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Toasthelper } from '../../components/common/toasthelper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { view } from 'drizzle-orm/sqlite-core';
 
 const { width } = Dimensions.get('window');
 const imageWidth = width - 40; // Full width minus some padding
@@ -51,6 +52,8 @@ const Details = () => {
       const user = await getUserCredentials();
       if (!user) {
         console.error('User not found in AsyncStorage');
+        Toasthelper.showError('Please log in to add items to your cart.');
+        navigation.navigate('Login');
         return;
       }
       const userId = user._id;
@@ -59,6 +62,21 @@ const Details = () => {
       handlepress();
     } catch (error) {
       console.error('Error adding to cart', error);
+    }
+  };
+
+  const handleViewCart = async () => {
+    try {
+      const user = await getUserCredentials();
+      if (!user) {
+        console.error('User not found in AsyncStorage');
+        Toasthelper.showError('Please log in to view your cart.');
+        navigation.navigate('Login');
+        return;
+      }
+      navigation.navigate('Cart');
+    } catch (error) {
+      console.error('Error fetching user credentials', error);
     }
   };
 
@@ -298,7 +316,7 @@ const Details = () => {
             contentStyle={styles.footerContent}
             labelStyle={styles.footerLabel}
             style={styles.footerButton}
-            onPress={() => navigation.navigate('Cart')}
+            onPress={handleViewCart}
           >
             View Cart
           </Button>
