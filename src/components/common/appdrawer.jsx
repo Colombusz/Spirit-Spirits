@@ -11,8 +11,7 @@ import { colors, spacing, fonts } from './theme';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
-const AppDrawer = ({ closeDrawer }) => {
-  const navigation = useNavigation();
+const AppDrawer = ({ closeDrawer, navigation }) => {
   const [user, setUser] = useState(null);
 
   // Refresh user data every time the drawer is focused

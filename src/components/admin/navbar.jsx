@@ -11,8 +11,7 @@ import { colors, spacing, fonts } from '../common/theme';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
-const AdminAppDrawer = ({ closeDrawer }) => {
-  const navigation = useNavigation();
+const AdminAppDrawer = ({ closeDrawer, navigation }) => {
   const [user, setUser] = useState(null);
 
   // Refresh user data every time the drawer is focused

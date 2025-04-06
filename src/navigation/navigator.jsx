@@ -6,6 +6,7 @@ import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-nat
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { useSelector } from 'react-redux';
+import { createNavigationContainerRef } from '@react-navigation/native';
 
 // Admin Screens
 import HomeIndex from '../screens/admin/index';
@@ -29,6 +30,7 @@ import AppDrawer from '../components/common/appdrawer';
 import AdminAppDrawer from '../components/admin/navbar';
 
 const Stack = createStackNavigator();
+export const navigationRef = createNavigationContainerRef();
 
 const Navigator = () => {
   const [drawerVisible, setDrawerVisible] = useState(false);
@@ -45,7 +47,7 @@ const Navigator = () => {
 
   return (
     <PaperProvider>
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef}>
         <View style={{ flex: 1 }}>
           {/* Floating menu button */}
           <TouchableOpacity
@@ -65,6 +67,7 @@ const Navigator = () => {
                   <Stack.Screen name="CreateLiquor" component={CreateLiquor} />
                   <Stack.Screen name="AdminOrders" component={AdminOrders} />
                   <Stack.Screen name="EditLiquor" component={EditLiquorForm} />
+                  <Stack.Screen name="Account" component={Account} />
                 </>
               ) : (
                 // User Stack
@@ -83,6 +86,9 @@ const Navigator = () => {
               <>
                 <Stack.Screen name="Login" component={Login} />
                 <Stack.Screen name="Signup" component={Signup} />
+                <Stack.Screen name="Home" component={Home} />
+                <Stack.Screen name="About" component={About} />
+                <Stack.Screen name="Details" component={Details} />
               </>
             )}
           </Stack.Navigator>
@@ -91,9 +97,15 @@ const Navigator = () => {
           {drawerVisible && (
             <View style={styles.drawerOverlay}>
               {user?.isAdmin ? (
-                <AdminAppDrawer closeDrawer={() => setDrawerVisible(false)} />
+                <AdminAppDrawer
+                  closeDrawer={() => setDrawerVisible(false)}
+                  navigation={navigationRef.current} // Pass navigation explicitly
+                />
               ) : (
-                <AppDrawer closeDrawer={() => setDrawerVisible(false)} />
+                <AppDrawer
+                  closeDrawer={() => setDrawerVisible(false)}
+                  navigation={navigationRef} // Pass navigation explicitly
+                />
               )}
             </View>
           )}
