@@ -100,8 +100,8 @@ export default Navigator;
 const styles = StyleSheet.create({
   floatingButton: {
     position: 'absolute',
-    top: 20,
-    right: 20,
+    top: 25,
+    right: 25,
     zIndex: 10,
     backgroundColor: 'rgba(255, 255, 255, 0.5)',
     padding: 5,
