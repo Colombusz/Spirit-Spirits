@@ -7,7 +7,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 // Screens
 import HomeScreen from '../screens/admin/index';
 import CreateLiquor from '../screens/admin/create';
-
+import EditLiquorForm from '../screens/admin/edit';
 
 import Login from '../screens/common/login';
 import About from '../screens/common/about';
@@ -77,6 +77,7 @@ const Navigator = () => {
             <>
               <Stack.Screen name="Adminhome" component={HomeScreen} />
               <Stack.Screen name="CreateLiquor" component={CreateLiquor} />
+              <Stack.Screen name="EditLiquor" component={EditLiquorForm} />
             </>
           )}
           {commonScreens}

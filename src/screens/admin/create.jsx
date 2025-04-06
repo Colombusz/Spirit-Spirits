@@ -1,10 +1,12 @@
 import * as React from 'react';
 import { View, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
-import { Provider as PaperProvider, TextInput, Button, Text, Menu, Portal, Modal, DefaultTheme } from 'react-native-paper';
+import { Provider as PaperProvider, TextInput, Button, Text, Menu, Portal, Modal, DefaultTheme, ActivityIndicator } from 'react-native-paper';
 import { useDispatch } from 'react-redux';
 import { createLiquor } from '../../redux/slices/createLiqourSlice.js';
 import * as ImagePicker from 'expo-image-picker';
+import { useNavigation } from '@react-navigation/native';
 import styles from './createStyle';
+
 // Custom theme with bronze color palette
 const bronzeTheme = {
   ...DefaultTheme,
@@ -22,17 +24,19 @@ const bronzeTheme = {
 
 export default function App() {
     const dispatch = useDispatch();
-  const [name, setname] = React.useState('');
-  const [price, setPrice] = React.useState('');
-  const [description, setDescription] = React.useState('');
-  const [brand, setBrand] = React.useState('');
-  const [stock, setStock] = React.useState('');
-  const [category, setCategory] = React.useState('');
-  const [categoryVisible, setCategoryVisible] = React.useState(false);
-  const [images, setImages] = React.useState([]);
-  const [submitted, setSubmitted] = React.useState(false);
-  const [imageModalVisible, setImageModalVisible] = React.useState(false);
-  const [selectedImage, setSelectedImage] = React.useState(null);
+    const navigation = useNavigation();
+    const [name, setname] = React.useState('');
+    const [price, setPrice] = React.useState('');
+    const [description, setDescription] = React.useState('');
+    const [brand, setBrand] = React.useState('');
+    const [stock, setStock] = React.useState('');
+    const [category, setCategory] = React.useState('');
+    const [categoryVisible, setCategoryVisible] = React.useState(false);
+    const [images, setImages] = React.useState([]);
+    const [submitted, setSubmitted] = React.useState(false);
+    const [imageModalVisible, setImageModalVisible] = React.useState(false);
+    const [selectedImage, setSelectedImage] = React.useState(null);
+    const [isLoading, setIsLoading] = React.useState(false);
 
   // Categories for dropdown
   const categories = [
@@ -80,8 +84,6 @@ export default function App() {
     
     if (permissionResult.granted === false) {
       alert('Permission to access camera is required!');
-
-      
       return;
     }
 
@@ -107,12 +109,14 @@ export default function App() {
     setImageModalVisible(true);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Validation: Check if all required fields are filled
     if (!name || !price || !description || !brand || !stock || !category || images.length === 0) {
         alert("Please fill out all the fields and add at least one image.");
         return;
     }
+    
+    setIsLoading(true);
     
     const productDetails = {
         name,
@@ -123,21 +127,33 @@ export default function App() {
         category,
     };
     
-    // Dispatch the action to your Redux slice (createLiquorSlice)
-    dispatch(createLiquor(productDetails, images));
-    
-    // Reset states after submitting the form
-    setname('');
-    setPrice('');
-    setDescription('');
-    setBrand('');
-    setStock('');
-    setCategory('');
-    setImages([]);
-    setSubmitted(true);
-    setImageModalVisible(false);
-    setSelectedImage(null);
-};
+    try {
+        // Dispatch the action to your Redux slice (createLiquorSlice)
+        await dispatch(createLiquor(productDetails, images));
+        
+        // Reset states after submitting the form
+        setname('');
+        setPrice('');
+        setDescription('');
+        setBrand('');
+        setStock('');
+        setCategory('');
+        setImages([]);
+        setSubmitted(true);
+        setImageModalVisible(false);
+        setSelectedImage(null);
+        
+        // Add a small delay to show the success message before navigating
+        setTimeout(() => {
+            setIsLoading(false);
+            navigation.navigate('Adminhome');
+        }, 1500);
+    } catch (error) {
+        console.error("Error submitting product:", error);
+        alert("Failed to submit product. Please try again.");
+        setIsLoading(false);
+    }
+  };
 
   return (
     <PaperProvider theme={bronzeTheme}>
@@ -154,6 +170,7 @@ export default function App() {
             outlineColor="#b9722d"
             activeOutlineColor="#cd7f32"
             textColor="#3e260f"
+            disabled={isLoading}
           />
 
           <TextInput
@@ -166,6 +183,7 @@ export default function App() {
             outlineColor="#b9722d"
             activeOutlineColor="#cd7f32"
             textColor="#3e260f"
+            disabled={isLoading}
           />
 
           <TextInput
@@ -179,6 +197,7 @@ export default function App() {
             outlineColor="#b9722d"
             activeOutlineColor="#cd7f32"
             textColor="#3e260f"
+            disabled={isLoading}
           />
 
           <TextInput
@@ -190,6 +209,7 @@ export default function App() {
             outlineColor="#b9722d"
             activeOutlineColor="#cd7f32"
             textColor="#3e260f"
+            disabled={isLoading}
           />
 
           <TextInput
@@ -202,18 +222,20 @@ export default function App() {
             outlineColor="#b9722d"
             activeOutlineColor="#cd7f32"
             textColor="#3e260f"
+            disabled={isLoading}
           />
 
           {/* Category Dropdown */}
           <Text style={styles.sectionTitle}>Category</Text>
           <Menu
-            visible={categoryVisible}
+            visible={categoryVisible && !isLoading}
             onDismiss={() => setCategoryVisible(false)}
             contentStyle={styles.menuContent}
             anchor={
               <TouchableOpacity 
                 style={styles.dropdownButton}
-                onPress={() => setCategoryVisible(true)}
+                onPress={() => !isLoading && setCategoryVisible(true)}
+                disabled={isLoading}
               >
                 <Text style={styles.dropdownButtonText}>
                   {category ? categories.find(cat => cat.value === category)?.label : 'Select Category'}
@@ -244,6 +266,7 @@ export default function App() {
               style={styles.imageUploadButton}
               buttonColor="#f5eccf"
               textColor="#674019"
+              disabled={isLoading}
             >
               Add Images
             </Button>
@@ -254,6 +277,7 @@ export default function App() {
               style={styles.imageUploadButton}
               buttonColor="#f5eccf"
               textColor="#674019"
+              disabled={isLoading}
             >
               Take Picture
             </Button>
@@ -264,7 +288,7 @@ export default function App() {
             <View style={styles.imagePreviewContainer}>
               {images.map((image, index) => (
                 <View key={index} style={styles.imagePreviewWrapper}>
-                  <TouchableOpacity onPress={() => viewImage(image)}>
+                  <TouchableOpacity onPress={() => !isLoading && viewImage(image)} disabled={isLoading}>
                     <Image 
                       source={{ uri: image.uri }} 
                       style={styles.imagePreview} 
@@ -278,27 +302,36 @@ export default function App() {
                     onPress={() => removeImage(index)}
                     style={styles.removeImageButton}
                     buttonColor="#a46628"
+                    disabled={isLoading}
                   />
                 </View>
               ))}
             </View>
           )}
 
-          <Button 
-            mode="contained" 
-            onPress={handleSubmit} 
-            style={styles.submitButton}
-            buttonColor="#cd7f32"
-            textColor="#fffff0"
-          >
-            Submit Product
-          </Button>
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#cd7f32" />
+              <Text style={styles.loadingText}>Submitting product...</Text>
+            </View>
+          ) : (
+            <Button 
+              mode="contained" 
+              onPress={handleSubmit} 
+              style={styles.submitButton}
+              buttonColor="#cd7f32"
+              textColor="#fffff0"
+              disabled={isLoading}
+            >
+              Submit Product
+            </Button>
+          )}
 
-          {submitted && (
+          {submitted && !isLoading && (
             <View style={styles.resultContainer}>
               <Text variant="titleMedium" style={styles.resultTitle}>Product Details Submitted:</Text>
               <Text style={styles.resultText}>Name: {name}</Text>
-              <Text style={styles.resultText}>Price: ${price}</Text>
+              <Text style={styles.resultText}>Price: ₱{price}</Text>
               <Text style={styles.resultText}>Brand: {brand}</Text>
               <Text style={styles.resultText}>Stock: {stock} units</Text>
               <Text style={styles.resultText}>Category: {categories.find(cat => cat.value === category)?.label || 'Not selected'}</Text>
@@ -311,14 +344,14 @@ export default function App() {
       {/* Image Preview Modal */}
       <Portal>
         <Modal 
-          visible={imageModalVisible} 
+          visible={imageModalVisible && !isLoading} 
           onDismiss={() => setImageModalVisible(false)}
           contentContainerStyle={styles.modalContainer}
         >
           {selectedImage && (
             <View>
               <Image 
-                source={{ uri: selectedImage.uri }} 
+                source={{ uri: selectedImage.uri || selectedImage.url }} 
                 style={styles.fullSizeImage} 
               />
               <Button 
@@ -336,4 +369,3 @@ export default function App() {
     </PaperProvider>
   );
 }
-

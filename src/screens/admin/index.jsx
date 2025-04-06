@@ -2,27 +2,42 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, ScrollView, SafeAreaView } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchLiquors, fetchLiquorById } from '../../redux/actions/liquorAction';
+import { fetchLiquors } from '../../redux/actions/liquorAction';
 import CardItem from '../../components/admin/admincard';
 import { Searchbar, FAB } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
-
+import { deleteLiquor } from '../../redux/actions/liquorAction'; // Import the deleteLiquor action
+import { Alert } from 'react-native';
 export default function HomeIndex() {
   const dispatch = useDispatch();
   const { liquors, loading, error } = useSelector((state) => state.liquor);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredLiquors, setFilteredLiquors] = useState([]);
-  
+  const navigation = useNavigation();
+
+  // Fetch liquors initially when the component mounts
   useEffect(() => {
     dispatch(fetchLiquors());
   }, [dispatch]);
 
+  // Re-query liquors when screen is focused
   useEffect(() => {
-    if (liquors) {
+    const unsubscribe = navigation.addListener('focus', () => {
+      console.log('Screen is focused, refreshing data...');
+      dispatch(fetchLiquors()); // Re-fetch liquors when the screen is focused
+    });
+
+    // Cleanup the listener when the component is unmounted
+    return unsubscribe;
+  }, [navigation, dispatch]);
+
+  // Filter liquors based on search query
+  useEffect(() => {
+    if (liquors && liquors.length > 0) {
       if (searchQuery.trim() === '') {
         setFilteredLiquors(liquors);
       } else {
-        const filtered = liquors.filter(liquor => 
+        const filtered = liquors.filter((liquor) =>
           liquor.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
           (liquor.description && liquor.description.toLowerCase().includes(searchQuery.toLowerCase()))
         );
@@ -31,13 +46,47 @@ export default function HomeIndex() {
     }
   }, [searchQuery, liquors]);
 
-  const onChangeSearch = query => setSearchQuery(query);
-  const navigation = useNavigation();
-  const handleAddNewLiqour = () => {
+  const onChangeSearch = (query) => setSearchQuery(query);
 
+  const handleAddNewLiquor = () => {
     navigation.navigate('CreateLiquor');
   };
-  // CreateLiquor
+
+  const handleDeleteLiquor = (id) => {
+    // Show confirmation alert
+    Alert.alert(
+      "Confirm Deletion",
+      "Are you sure you want to delete this liquor?",
+      [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Deletion canceled"),
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          onPress: async () => {
+            try {
+              // Proceed with deletion
+              await dispatch(deleteLiquor(id));
+  
+              // Immediately update filteredLiquors state after deletion
+              setFilteredLiquors((prevLiquors) =>
+                prevLiquors.filter((liquor) => liquor._id !== id)
+              );
+  
+              // Re-fetch liquors list to get the updated data
+              await dispatch(fetchLiquors());
+            } catch (error) {
+              console.error("Error during deletion:", error);
+            }
+          }
+        }
+      ],
+      { cancelable: true }
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="auto" />
@@ -52,8 +101,8 @@ export default function HomeIndex() {
           iconColor="#555"
         />
       </View>
-      
-      <ScrollView 
+
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -65,8 +114,9 @@ export default function HomeIndex() {
         ) : filteredLiquors && filteredLiquors.length > 0 ? (
           filteredLiquors.map((liquor, index) => (
             <CardItem
-              key={liquor.id || index}
-              liqour={liquor}
+              key={liquor._id || index}
+              liquor={liquor}
+              onDelete={() => handleDeleteLiquor(liquor._id)}// Pass delete handler to CardItem
             />
           ))
         ) : (
@@ -75,12 +125,12 @@ export default function HomeIndex() {
           </Text>
         )}
       </ScrollView>
-      
+
       <View style={styles.fabContainer}>
         <FAB
           style={styles.fab}
           icon="glass-wine"
-          onPress={handleAddNewLiqour}
+          onPress={handleAddNewLiquor}
           color="white"
           label="Add Liquor"
         />

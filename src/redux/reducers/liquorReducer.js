@@ -1,6 +1,6 @@
 // liquorReducer.js
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchLiquors, fetchLiquorById } from '../actions/liquorAction';
+import { fetchLiquors, fetchLiquorById, updateLiquorById, deleteLiquor } from '../actions/liquorAction';
 
 const initialState = {
   liquors: [],
@@ -23,9 +23,11 @@ const liquorSlice = createSlice({
       .addCase(fetchLiquors.pending, (state) => {
         state.loading = true;
         state.error = null;
+        state.liquors = []; // Clear previous liquors
       })
       .addCase(fetchLiquors.fulfilled, (state, action) => {
         state.loading = false;
+        state.liquors = [];
         state.liquors = action.payload;
       })
       .addCase(fetchLiquors.rejected, (state, action) => {
@@ -47,7 +49,40 @@ const liquorSlice = createSlice({
       .addCase(fetchLiquorById.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      
+      // For updating liquor details by ID
+      .addCase(updateLiquorById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateLiquorById.fulfilled, (state, action) => {
+        state.loading = false;
+        // Assuming the updated liquor is returned in action.payload
+        state.currentLiquor = action.payload.data;
+      })
+      .addCase(updateLiquorById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // deleting liquor
+      .addCase(deleteLiquor.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteLiquor.fulfilled, (state, action) => {
+        state.loading = false;
+        state.liquors = [];
+        state.liquors = state.liquors.filter(liquor => liquor._id !== action.payload.id);
+      })
+      .addCase(deleteLiquor.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
+
+
+      
   },
 });
 
