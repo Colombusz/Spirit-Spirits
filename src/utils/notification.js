@@ -1,11 +1,11 @@
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
-import { Alert, Platform } from 'react-native';
+import { Alert } from 'react-native';
 
 export async function registerForPushNotificationsAsync() {
   if (!Device.isDevice) {
     Alert.alert('Must use physical device for Push Notifications');
-    return;
+    return null;
   }
 
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -18,12 +18,11 @@ export async function registerForPushNotificationsAsync() {
 
   if (finalStatus !== 'granted') {
     Alert.alert('Failed to get push token for push notification!');
-    return;
+    return null;
   }
 
   const tokenData = await Notifications.getExpoPushTokenAsync();
   console.log('Expo Push Token:', tokenData.data);
-
   return tokenData.data;
 }
 
