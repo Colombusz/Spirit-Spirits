@@ -1,4 +1,3 @@
-// UserOrders.jsx
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -7,7 +6,8 @@ import {
   Alert,
   ActivityIndicator,
   Image,
-  ScrollView
+  ScrollView,
+  TouchableOpacity
 } from 'react-native';
 import {
   Appbar,
@@ -27,6 +27,44 @@ import Toast from 'react-native-toast-message';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors, spacing } from '../../components/common/theme.js';
 import { getUserCredentials } from '../../utils/userStorage';
+
+// Star Rating Component
+const StarRating = ({ rating, setRating, editable = false, size = 24 }) => {
+  const handleStarPress = (selectedRating) => {
+    if (editable) {
+      setRating(selectedRating);
+    }
+  };
+
+  const renderStars = () => {
+    const stars = [];
+    const currentRating = Number(rating) || 0;
+
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <TouchableOpacity
+          key={i}
+          onPress={() => handleStarPress(i)}
+          disabled={!editable}
+          style={{ padding: 2 }}
+        >
+          <Icon
+            name={i <= currentRating ? "star" : "star-outline"}
+            size={size}
+            color={i <= currentRating ? colors.starYellow : colors.bronzeShade4}
+          />
+        </TouchableOpacity>
+      );
+    }
+    return stars;
+  };
+
+  return (
+    <View style={styles.starsContainer}>
+      {renderStars()}
+    </View>
+  );
+};
 
 const OrderStatusBadge = ({ status }) => {
   const getStatusColor = () => {
@@ -67,9 +105,10 @@ const UserOrders = () => {
   // For review modal (for a specific order item)
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [reviewRating, setReviewRating] = useState('');
+  const [reviewRating, setReviewRating] = useState(0);
   const [reviewComment, setReviewComment] = useState('');
   const [isEditingReview, setIsEditingReview] = useState(false);
+  const [reviewError, setReviewError] = useState('');
 
   // Store the current user from AsyncStorage
   const [currentUser, setCurrentUser] = useState(null);
@@ -104,20 +143,38 @@ const UserOrders = () => {
       newStatus = 'Delivered';
     }
     if (!newStatus) return;
-    dispatch(updateOrderStatus({ orderId, newStatus }))
-      .unwrap()
-      .then((updatedOrder) => {
-        Toast.show({
-          type: 'success',
-          text1: 'Order Updated',
-          text2: `Order #${updatedOrder._id.slice(-6)} is now ${newStatus}`,
-          visibilityTime: 3000,
-          position: 'bottom'
-        });
-      })
-      .catch((err) => {
-        Alert.alert("Update Failed", err.message || "Couldn't update order status");
-      });
+    
+    Alert.alert(
+      action === 'cancel' ? 'Cancel Order' : 'Confirm Delivery',
+      action === 'cancel' 
+        ? 'Are you sure you want to cancel this order?' 
+        : 'Confirm that you have received this order?',
+      [
+        { text: 'No', style: 'cancel' },
+        { 
+          text: 'Yes', 
+          onPress: () => {
+            dispatch(updateOrderStatus({ orderId, status: newStatus }))
+              .unwrap()
+              .then(() => {
+                Toast.show({
+                  type: 'success',
+                  text1: action === 'cancel' ? 'Order Cancelled' : 'Delivery Confirmed',
+                  text2: action === 'cancel' 
+                    ? 'Your order has been cancelled.' 
+                    : 'Thank you for confirming the delivery.',
+                  visibilityTime: 3000,
+                  position: 'bottom'
+                });
+                dispatch(fetchOrders());
+              })
+              .catch((err) => {
+                Alert.alert('Action Failed', err.message || `Couldn't ${action} order`);
+              });
+          }
+        }
+      ]
+    );
   };
 
   // Open order details modal
@@ -129,14 +186,16 @@ const UserOrders = () => {
   // Open review modal for a specific order item
   const openReviewModal = (item) => {
     setSelectedItem(item);
+    setReviewError('');
+    
     // Check if the item already has a review. If so, set editing mode.
     if (item.review) {
         setIsEditingReview(true);
-        setReviewRating(String(item.review.rating));
+        setReviewRating(item.review.rating);
         setReviewComment(item.review.comment);
     } else {
         setIsEditingReview(false);
-        setReviewRating('');
+        setReviewRating(0);
         setReviewComment('');
     }
     setReviewModalVisible(true);
@@ -144,13 +203,22 @@ const UserOrders = () => {
 
   // Handle review submission (create or update)
   const handleSubmitReview = () => {
-    if (!reviewRating || !reviewComment) {
-      Alert.alert('Incomplete', 'Please enter both rating and comment.');
+    // Validate review input
+    if (reviewRating === 0) {
+      setReviewError('Please select a star rating');
       return;
     }
-    // Build review data payload.
+    
+    if (!reviewComment.trim()) {
+      setReviewError('Please enter a comment');
+      return;
+    }
+
+    setReviewError('');
+    
+    // Build review data payload
     const reviewData = {
-      rating: parseFloat(reviewRating),
+      rating: reviewRating,
       comment: reviewComment,
       user: currentUser._id,
       // Assuming the order item has a liquor field or liquorDetails with an _id
@@ -159,45 +227,59 @@ const UserOrders = () => {
     };
 
     if (isEditingReview && selectedItem.review && selectedItem.review._id) {
-      // Update existing review.
-      dispatch(updateReview({ reviewId: selectedItem.review._id, reviewDetails: reviewData }))
-        .unwrap()
-        .then((updatedReview) => {
-        Toast.show({
-            type: 'success',
-            text1: 'Review Updated',
-            text2: `Review for ${selectedItem.name} has been updated.`,
-            visibilityTime: 3000,
-            position: 'bottom'
-        });
-        setReviewModalVisible(false);
-        dispatch(fetchOrders());
-        })
-        .catch((err) => {
-        Alert.alert("Update Failed", err.message || "Couldn't update review");
-        });
-    } else {
-      // Create new review.
-      dispatch(createReview({ reviewDetails: reviewData }))
-        .unwrap()
-        .then((newReview) => {
-          Toast.show({
-            type: 'success',
-            text1: 'Review Submitted',
-            text2: `Review for ${selectedItem.name} submitted.`,
-            visibilityTime: 3000,
-            position: 'bottom'
+        // Update existing review
+        dispatch(updateReview({ reviewId: selectedItem.review._id, reviewDetails: reviewData }))
+          .unwrap()
+          .then((updatedReview) => {
+            Toast.show({
+              type: 'success',
+              text1: 'Review Updated',
+              text2: `Review for ${selectedItem.name} has been updated.`,
+              visibilityTime: 3000,
+              position: 'bottom'
+            });
+            // Update the selected order locally so the modal reflects the changes immediately
+            const updatedItems = selectedOrder.orderItems.map(item =>
+              item._id === selectedItem._id ? { ...item, review: updatedReview } : item
+            );
+            setSelectedOrder({ ...selectedOrder, orderItems: updatedItems });
+            // Update selectedItem if you're using it to display in the review modal
+            setSelectedItem({ ...selectedItem, review: updatedReview });
+            setReviewModalVisible(false);
+            // Optionally refresh orders in the global state
+            dispatch(fetchOrders());
+          })
+          .catch((err) => {
+            Alert.alert("Update Failed", err.message || "Couldn't update review");
           });
-          setReviewModalVisible(false);
-          // Optionally refresh orders or update local state to reflect the new review.
-        })
-        .catch((err) => {
-          Alert.alert("Submission Failed", err.message || "Couldn't submit review");
-        });
-    }
+      } else {
+        // Create new review
+        dispatch(createReview({ reviewDetails: reviewData }))
+          .unwrap()
+          .then((newReview) => {
+            Toast.show({
+              type: 'success',
+              text1: 'Review Submitted',
+              text2: `Review for ${selectedItem.name} submitted.`,
+              visibilityTime: 3000,
+              position: 'bottom'
+            });
+            // Update the selectedOrder locally
+            const updatedItems = selectedOrder.orderItems.map(item =>
+              item._id === selectedItem._id ? { ...item, review: newReview } : item
+            );
+            setSelectedOrder({ ...selectedOrder, orderItems: updatedItems });
+            setReviewModalVisible(false);
+            // Refresh orders in the global state
+            dispatch(fetchOrders());
+          })
+          .catch((err) => {
+            Alert.alert("Submission Failed", err.message || "Couldn't submit review");
+          });
+      }
   };
 
-  // Filter orders so that only orders belonging to the current user are shown.
+  // Filter orders so that only orders belonging to the current user are shown
   const filteredOrders = currentUser && orders
     ? orders.filter(order => {
         // order.user might be a string or an object
@@ -326,12 +408,17 @@ const UserOrders = () => {
                     <View style={styles.reviewContainer}>
                       {item.review ? (
                         <>
-                          <Text style={styles.itemReview}>Review: {item.review.comment} (Rating: {item.review.rating})</Text>
+                          <View style={styles.reviewHeader}>
+                            <Text style={styles.reviewTitle}>Your Review</Text>
+                            <StarRating rating={item.review.rating} size={16} />
+                          </View>
+                          <Text style={styles.reviewText}>{item.review.comment}</Text>
                           <Button
                             mode="outlined"
                             onPress={() => openReviewModal(item)}
-                            style={[styles.reviewButton, { marginTop: spacing.small }]}
+                            style={styles.reviewButton}
                             labelStyle={{ fontSize: 12 }}
+                            icon="pencil"
                           >
                             Edit Review
                           </Button>
@@ -342,6 +429,7 @@ const UserOrders = () => {
                           onPress={() => openReviewModal(item)}
                           style={styles.reviewButton}
                           labelStyle={{ fontSize: 12 }}
+                          icon="star-outline"
                         >
                           Add Review
                         </Button>
@@ -368,26 +456,46 @@ const UserOrders = () => {
   const renderReviewModal = () => (
     <Portal>
       <Dialog visible={reviewModalVisible} onDismiss={() => setReviewModalVisible(false)} style={styles.dialog}>
-        <Dialog.Title style={styles.dialogTitle}>{isEditingReview ? 'Edit Review' : 'Add Review'}</Dialog.Title>
+        <Dialog.Title style={styles.dialogTitle}>
+          {isEditingReview ? 'Edit Review' : 'Add Review'}
+        </Dialog.Title>
         <Dialog.Content>
+          <View style={styles.modalProductInfo}>
+            <Text style={styles.modalProductName}>{selectedItem?.name}</Text>
+          </View>
+          
+          <Text style={styles.ratingLabel}>Your Rating</Text>
+          <View style={styles.ratingContainer}>
+            <StarRating rating={reviewRating} setRating={setReviewRating} editable={true} size={32} />
+          </View>
+          
           <TextInput
-            label="Rating (1-5)"
-            keyboardType="numeric"
-            value={reviewRating}
-            onChangeText={setReviewRating}
-            style={styles.textInput}
-          />
-          <TextInput
-            label="Comment"
+            label="Your Review"
+            placeholder="Share your thoughts about this product..."
             multiline
             value={reviewComment}
             onChangeText={setReviewComment}
-            style={[styles.textInput, { height: 80 }]}
+            style={[styles.textInput, { height: 100 }]}
           />
+          
+          {reviewError ? (
+            <Text style={styles.errorText}>{reviewError}</Text>
+          ) : null}
         </Dialog.Content>
-        <Dialog.Actions>
-          <Button onPress={() => setReviewModalVisible(false)}>Cancel</Button>
-          <Button onPress={handleSubmitReview}>Submit</Button>
+        <Dialog.Actions style={styles.reviewModalActions}>
+          <Button 
+            onPress={() => setReviewModalVisible(false)}
+            style={styles.cancelButton}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onPress={handleSubmitReview}
+            mode="contained"
+            style={styles.submitButton}
+          >
+            Submit
+          </Button>
         </Dialog.Actions>
       </Dialog>
     </Portal>
@@ -450,7 +558,7 @@ const UserOrders = () => {
 };
 
 const styles = StyleSheet.create({
-  // ... (your existing styles)
+  // Your existing styles plus new ones
   container: {
     flex: 1,
     backgroundColor: colors.background
@@ -655,12 +763,55 @@ const styles = StyleSheet.create({
   },
   reviewContainer: {
     marginTop: spacing.small,
-    alignItems: 'flex-start'
+    backgroundColor: colors.ivory2,
+    padding: spacing.small,
+    borderRadius: 8
+  },
+  reviewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.small
+  },
+  reviewTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.bronzeShade7
+  },
+  reviewText: {
+    fontSize: 14,
+    color: colors.bronzeShade8,
+    fontStyle: 'italic',
+    marginBottom: spacing.medium
   },
   reviewButton: {
-    marginTop: spacing.small,
+    alignSelf: 'flex-start',
     borderRadius: 6,
     borderColor: colors.primary
+  },
+  // New Star Rating Styles
+  starsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  modalProductInfo: {
+    marginBottom: spacing.medium,
+    alignItems: 'center'
+  },
+  modalProductName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.bronzeShade8,
+    textAlign: 'center'
+  },
+  ratingLabel: {
+    fontSize: 16,
+    color: colors.bronzeShade7,
+    marginBottom: spacing.small
+  },
+  ratingContainer: {
+    alignItems: 'center',
+    marginBottom: spacing.medium
   },
   textInput: {
     backgroundColor: colors.ivory1,
@@ -670,6 +821,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bronzeShade5,
     borderRadius: 8,
     paddingHorizontal: spacing.medium
+  },
+  reviewModalActions: {
+    paddingHorizontal: spacing.medium,
+    justifyContent: 'space-between'
+  },
+  cancelButton: {
+    borderRadius: 8
+  },
+  submitButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 8
   }
 });
 
