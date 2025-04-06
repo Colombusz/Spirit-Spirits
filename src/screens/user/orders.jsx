@@ -114,6 +114,9 @@ const UserOrders = () => {
 
   // Store the current user from AsyncStorage
   const [currentUser, setCurrentUser] = useState(null);
+  
+  // New filter state for order status on the user side
+  const [filterStatus, setFilterStatus] = useState("All");
 
   useEffect(() => {
     // Load orders
@@ -132,11 +135,10 @@ const UserOrders = () => {
 
   const handleRefresh = () => {
     setRefreshing(true);
-    dispatch(fetchOrders({db})).finally(() => setRefreshing(false));
+    dispatch(fetchOrders({ db })).finally(() => setRefreshing(false));
   };
 
-  // User-side order actions:
-  // Cancel order if Pending; confirm delivery if Shipped.
+  // User-side order actions: Cancel order if Pending; confirm delivery if Shipped.
   const handleUserAction = (orderId, action) => {
     let newStatus = '';
     if (action === 'cancel') {
@@ -145,7 +147,6 @@ const UserOrders = () => {
       newStatus = 'Delivered';
     }
     if (!newStatus) return;
-    console.log(newStatus);
     Alert.alert(
       action === 'cancel' ? 'Cancel Order' : 'Confirm Delivery',
       action === 'cancel' 
@@ -189,110 +190,127 @@ const UserOrders = () => {
   const openReviewModal = (item) => {
     setSelectedItem(item);
     setReviewError('');
-    
-    // Check if the item already has a review. If so, set editing mode.
     if (item.review) {
-        setIsEditingReview(true);
-        setReviewRating(item.review.rating);
-        setReviewComment(item.review.comment);
+      setIsEditingReview(true);
+      setReviewRating(item.review.rating);
+      setReviewComment(item.review.comment);
     } else {
-        setIsEditingReview(false);
-        setReviewRating(0);
-        setReviewComment('');
+      setIsEditingReview(false);
+      setReviewRating(0);
+      setReviewComment('');
     }
     setReviewModalVisible(true);
   };
 
   // Handle review submission (create or update)
   const handleSubmitReview = () => {
-    // Validate review input
     if (reviewRating === 0) {
       setReviewError('Please select a star rating');
       return;
     }
-    
     if (!reviewComment.trim()) {
       setReviewError('Please enter a comment');
       return;
     }
-
     setReviewError('');
-    
-    // Build review data payload
     const reviewData = {
       rating: reviewRating,
       comment: reviewComment,
       user: currentUser._id,
-      // Assuming the order item has a liquor field or liquorDetails with an _id
       liquor: selectedItem.liquor || (selectedItem.liquorDetails && selectedItem.liquorDetails._id),
       order: selectedOrder._id,
     };
-
     if (isEditingReview && selectedItem.review && selectedItem.review._id) {
-        // Update existing review
-        dispatch(updateReview({ reviewId: selectedItem.review._id, reviewDetails: reviewData , db }))
-          .unwrap()
-          .then((updatedReview) => {
-            Toast.show({
-              type: 'success',
-              text1: 'Review Updated',
-              text2: `Review for ${selectedItem.name} has been updated.`,
-              visibilityTime: 3000,
-              position: 'bottom'
-            });
-            // Update the selected order locally so the modal reflects the changes immediately
-            const updatedItems = selectedOrder.orderItems.map(item =>
-              item._id === selectedItem._id ? { ...item, review: updatedReview } : item
-            );
-            setSelectedOrder({ ...selectedOrder, orderItems: updatedItems });
-            // Update selectedItem if you're using it to display in the review modal
-            setSelectedItem({ ...selectedItem, review: updatedReview });
-            setReviewModalVisible(false);
-            // Optionally refresh orders in the global state
-            dispatch(fetchOrders({ db }));
-          })
-          .catch((err) => {
-            Alert.alert("Update Failed", err.message || "Couldn't update review");
+      dispatch(updateReview({ reviewId: selectedItem.review._id, reviewDetails: reviewData, db }))
+        .unwrap()
+        .then((updatedReview) => {
+          Toast.show({
+            type: 'success',
+            text1: 'Review Updated',
+            text2: `Review for ${selectedItem.name} has been updated.`,
+            visibilityTime: 3000,
+            position: 'bottom'
           });
-      } else {
-        // Create new review
-        dispatch(createReview({ reviewDetails: reviewData, db }))
-          .unwrap()
-          .then((newReview) => {
-            Toast.show({
-              type: 'success',
-              text1: 'Review Submitted',
-              text2: `Review for ${selectedItem.name} submitted.`,
-              visibilityTime: 3000,
-              position: 'bottom'
-            });
-            // Update the selectedOrder locally
-            const updatedItems = selectedOrder.orderItems.map(item =>
-              item._id === selectedItem._id ? { ...item, review: newReview } : item
-            );
-            setSelectedOrder({ ...selectedOrder, orderItems: updatedItems });
-            setReviewModalVisible(false);
-            // Refresh orders in the global state
-            dispatch(fetchOrders({ db }));
-          })
-          .catch((err) => {
-            Alert.alert("Submission Failed", err.message || "Couldn't submit review");
+          const updatedItems = selectedOrder.orderItems.map(item =>
+            item._id === selectedItem._id ? { ...item, review: updatedReview } : item
+          );
+          setSelectedOrder({ ...selectedOrder, orderItems: updatedItems });
+          setSelectedItem({ ...selectedItem, review: updatedReview });
+          setReviewModalVisible(false);
+          dispatch(fetchOrders({ db }));
+        })
+        .catch((err) => {
+          Alert.alert("Update Failed", err.message || "Couldn't update review");
+        });
+    } else {
+      dispatch(createReview({ reviewDetails: reviewData, db }))
+        .unwrap()
+        .then((newReview) => {
+          Toast.show({
+            type: 'success',
+            text1: 'Review Submitted',
+            text2: `Review for ${selectedItem.name} submitted.`,
+            visibilityTime: 3000,
+            position: 'bottom'
           });
-      }
+          const updatedItems = selectedOrder.orderItems.map(item =>
+            item._id === selectedItem._id ? { ...item, review: newReview } : item
+          );
+          setSelectedOrder({ ...selectedOrder, orderItems: updatedItems });
+          setReviewModalVisible(false);
+          dispatch(fetchOrders({ db }));
+        })
+        .catch((err) => {
+          Alert.alert("Submission Failed", err.message || "Couldn't submit review");
+        });
+    }
   };
 
-  // Filter orders so that only orders belonging to the current user are shown
+  // Filter orders so that only orders belonging to the current user are shown,
+  // and further filter by the selected status.
   const filteredOrders = currentUser && orders
     ? orders.filter(order => {
-        // order.user might be a string or an object
+        let belongsToUser = false;
         if (typeof order.user === 'string') {
-          return order.user === currentUser._id;
+          belongsToUser = order.user === currentUser._id;
         } else if (order.user && order.user._id) {
-          return order.user._id === currentUser._id;
+          belongsToUser = order.user._id === currentUser._id;
         }
-        return false;
+        return belongsToUser && (filterStatus === "All" || order.status === filterStatus);
       })
     : [];
+
+  // Render a filter bar for order status
+  const renderFilterBar = () => {
+    const filterOptions = ["All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
+    return (
+      <View style={styles.filterOuterContainer}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          contentContainerStyle={styles.filterContainer}
+        >
+          {filterOptions.map(status => (
+            <Chip
+              key={status}
+              selected={filterStatus === status}
+              onPress={() => setFilterStatus(status)}
+              style={[
+                styles.filterChip,
+                filterStatus === status && styles.selectedFilterChip
+              ]}
+              textStyle={[
+                styles.filterChipText,
+                filterStatus === status && styles.selectedFilterChipText
+              ]}
+            >
+              {status}
+            </Chip>
+          ))}
+        </ScrollView>
+      </View>
+    );
+  };
 
   // Render each order card for the user
   const renderOrder = ({ item }) => {
@@ -465,12 +483,10 @@ const UserOrders = () => {
           <View style={styles.modalProductInfo}>
             <Text style={styles.modalProductName}>{selectedItem?.name}</Text>
           </View>
-          
           <Text style={styles.ratingLabel}>Your Rating</Text>
           <View style={styles.ratingContainer}>
             <StarRating rating={reviewRating} setRating={setReviewRating} editable={true} size={32} />
           </View>
-          
           <TextInput
             label="Your Review"
             placeholder="Share your thoughts about this product..."
@@ -479,23 +495,15 @@ const UserOrders = () => {
             onChangeText={setReviewComment}
             style={[styles.textInput, { height: 100 }]}
           />
-          
           {reviewError ? (
             <Text style={styles.errorText}>{reviewError}</Text>
           ) : null}
         </Dialog.Content>
         <Dialog.Actions style={styles.reviewModalActions}>
-          <Button 
-            onPress={() => setReviewModalVisible(false)}
-            style={styles.cancelButton}
-          >
+          <Button onPress={() => setReviewModalVisible(false)} style={styles.cancelButton}>
             Cancel
           </Button>
-          <Button 
-            onPress={handleSubmitReview}
-            mode="contained"
-            style={styles.submitButton}
-          >
+          <Button onPress={handleSubmitReview} mode="contained" style={styles.submitButton}>
             Submit
           </Button>
         </Dialog.Actions>
@@ -524,20 +532,28 @@ const UserOrders = () => {
       );
     }
     return (
-      <FlatList
-        data={filteredOrders}
-        keyExtractor={(order) => order._id}
-        renderItem={renderOrder}
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={
-          <View style={styles.centerContainer}>
-            <Icon name="package-variant" size={48} color={colors.bronzeShade3} />
-            <Text style={styles.emptyText}>No orders found</Text>
-          </View>
-        }
-        onRefresh={handleRefresh}
-        refreshing={refreshing}
-      />
+      <>
+        {renderFilterBar()}
+        <FlatList
+          data={filteredOrders}
+          keyExtractor={(order) => order._id}
+          renderItem={renderOrder}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <View style={styles.centerContainer}>
+              <Icon name="package-variant" size={48} color={colors.bronzeShade3} />
+              <Text style={styles.emptyText}>No orders found</Text>
+              {filterStatus !== "All" && (
+                <Text style={styles.filterHintText}>
+                  Try changing your filter or refresh to see all orders
+                </Text>
+              )}
+            </View>
+          }
+          onRefresh={handleRefresh}
+          refreshing={refreshing}
+        />
+      </>
     );
   };
 
@@ -560,7 +576,6 @@ const UserOrders = () => {
 };
 
 const styles = StyleSheet.create({
-  // Your existing styles plus new ones
   container: {
     flex: 1,
     backgroundColor: colors.background
@@ -575,6 +590,55 @@ const styles = StyleSheet.create({
   },
   appbarSubtitle: {
     color: colors.ivory2
+  },
+  // Enhanced filter container styles
+  filterOuterContainer: {
+    backgroundColor: colors.ivory2,
+    paddingVertical: spacing.medium,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.bronzeShade2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+    zIndex: 1,
+  },
+  filterHeaderText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.bronzeShade7,
+    marginHorizontal: spacing.medium,
+    marginBottom: spacing.small,
+  },
+  filterContainer: {
+    paddingHorizontal: spacing.medium,
+    paddingBottom: spacing.small,
+  },
+  filterChip: {
+    marginRight: spacing.small,
+    borderWidth: 1,
+    borderColor: colors.bronzeShade3,
+    backgroundColor: colors.ivory1,
+  },
+  selectedFilterChip: {
+    backgroundColor: colors.bronzeShade4,
+  },
+  filterChipText: {
+    color: colors.bronzeShade7,
+    fontSize: 13,
+  },
+  selectedFilterChipText: {
+    color: colors.ivory1,
+    fontWeight: 'bold',
+  },
+  // End of enhanced filter styles
+  filterHintText: {
+    color: colors.bronzeShade4,
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: spacing.small,
+    fontStyle: 'italic',
   },
   listContent: {
     padding: spacing.medium,
@@ -791,10 +855,9 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderColor: colors.primary
   },
-  // New Star Rating Styles
   starsContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'center'
   },
   modalProductInfo: {
     marginBottom: spacing.medium,
