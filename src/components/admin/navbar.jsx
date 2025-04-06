@@ -126,6 +126,18 @@ const AdminAppDrawer = ({ closeDrawer }) => {
                 closeDrawer();
               }}
             />
+             <DrawerItem
+              icon={({ focused }) => renderIcon('pricetags-outline', focused)}
+              label="Promo"
+              labelStyle={styles.drawerLabel}
+              activeBackgroundColor={`${colors.ivory4}CC`}
+              activeTintColor={colors.primary}
+              inactiveTintColor={colors.bronzeShade8}
+              onPress={() => {
+                navigation.navigate('PromoList');
+                closeDrawer();
+              }}
+            />
             
 
           </View>

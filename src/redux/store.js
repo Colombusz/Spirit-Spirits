@@ -7,6 +7,7 @@ import cartReducer from './reducers/cartReducer';
 import createLiquorReducer from './slices/createLiqourSlice';
 import orderReducer from './reducers/orderReducer'; 
 import reviewReducer from './reducers/reviewReducer';
+import promoReducer from './reducers/promoReducer';
 
 const store = configureStore({
   reducer: {
@@ -17,6 +18,7 @@ const store = configureStore({
     createdLiquor: createLiquorReducer,
     order: orderReducer,
     review: reviewReducer,
+    promo: promoReducer,
   },
 });
 

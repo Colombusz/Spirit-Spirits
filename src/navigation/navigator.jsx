@@ -20,7 +20,8 @@ import Details from '../screens/product/details';
 import Cart from '../screens/product/cart';
 import Checkout from '../screens/product/checkout';
 import UserOrders from '../screens/user/orders';
-
+import DiscountProductForm from '../screens/admin/promo';
+import PromoCarousel from '../screens/admin/promolist';
 // Drawers
 import AppDrawer from '../components/common/appdrawer';
 import AdminAppDrawer from '../components/admin/navbar';
@@ -65,6 +66,9 @@ const Navigator = () => {
                 <Stack.Screen name="CreateLiquor" component={CreateLiquor} />
                 <Stack.Screen name="AdminOrders" component={AdminOrders} />
                 <Stack.Screen name="EditLiquor" component={EditLiquorForm} />
+                <Stack.Screen name="PromoList" component={PromoCarousel} />
+                <Stack.Screen name="Promo" component={DiscountProductForm} />
+                
             </>
             )}
 
@@ -77,6 +81,7 @@ const Navigator = () => {
             <Stack.Screen name="Cart" component={Cart} />
             <Stack.Screen name="Checkout" component={Checkout} />
             <Stack.Screen name="UserOrders" component={UserOrders} />
+
           </Stack.Navigator>
 
           {/* Drawer Overlay */}
