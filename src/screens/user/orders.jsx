@@ -145,7 +145,7 @@ const UserOrders = () => {
       newStatus = 'Delivered';
     }
     if (!newStatus) return;
-    
+    console.log(newStatus);
     Alert.alert(
       action === 'cancel' ? 'Cancel Order' : 'Confirm Delivery',
       action === 'cancel' 
@@ -156,7 +156,7 @@ const UserOrders = () => {
         { 
           text: 'Yes', 
           onPress: () => {
-            dispatch(updateOrderStatus({ orderId, status: newStatus, db }))
+            dispatch(updateOrderStatus({ orderId, newStatus, db }))
               .unwrap()
               .then(() => {
                 Toast.show({
