@@ -127,12 +127,12 @@ const UserOrders = () => {
   }, [dispatch]);
 
   const loadOrders = () => {
-    dispatch(fetchOrders());
+    dispatch(fetchOrders({ db }));
   };
 
   const handleRefresh = () => {
     setRefreshing(true);
-    dispatch(fetchOrders()).finally(() => setRefreshing(false));
+    dispatch(fetchOrders({db})).finally(() => setRefreshing(false));
   };
 
   // User-side order actions:
@@ -168,7 +168,7 @@ const UserOrders = () => {
                   visibilityTime: 3000,
                   position: 'bottom'
                 });
-                dispatch(fetchOrders());
+                dispatch(fetchOrders({ db }));
               })
               .catch((err) => {
                 Alert.alert('Action Failed', err.message || `Couldn't ${action} order`);
@@ -249,7 +249,7 @@ const UserOrders = () => {
             setSelectedItem({ ...selectedItem, review: updatedReview });
             setReviewModalVisible(false);
             // Optionally refresh orders in the global state
-            dispatch(fetchOrders());
+            dispatch(fetchOrders({ db }));
           })
           .catch((err) => {
             Alert.alert("Update Failed", err.message || "Couldn't update review");
@@ -273,7 +273,7 @@ const UserOrders = () => {
             setSelectedOrder({ ...selectedOrder, orderItems: updatedItems });
             setReviewModalVisible(false);
             // Refresh orders in the global state
-            dispatch(fetchOrders());
+            dispatch(fetchOrders({ db }));
           })
           .catch((err) => {
             Alert.alert("Submission Failed", err.message || "Couldn't submit review");

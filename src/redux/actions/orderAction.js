@@ -1,9 +1,9 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import Constants from 'expo-constants';
-import { removeMultipleCartItems } from '../../utils/storage';
-import { getToken } from '../../utils/storage';
+import axios from 'axios';
+import { removeMultipleCartItems, getToken } from '../../utils/storage';
 
-const apiURL = Constants.expoConfig.extra?.BACKEND_URL || 'http://192.168.1.123:5000';
+const apiURL = Constants.expoConfig.extra?.BACKEND_URL || 'http://192.168.0.123:5000';
 
 export const createOrder = createAsyncThunk(
   'order/createOrder',
@@ -57,50 +57,59 @@ export const createOrder = createAsyncThunk(
 );
 
 export const fetchOrders = createAsyncThunk(
-    'order/fetchOrders',
-    async (_, thunkAPI) => {
-      try {
-        const res = await fetch(`${apiURL}/api/orders`);
-        const data = await res.json();
-        if (data.success) {
-          return data.data;
-        } else {
-          return thunkAPI.rejectWithValue(data.message);
-        }
-      } catch (error) {
-        return thunkAPI.rejectWithValue(error.message);
+  'order/fetchOrders',
+  async ({ db }, thunkAPI) => {
+    try {
+      const token = await getToken(db);
+      const config = {
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      };
+      const response = await fetch(`${apiURL}/api/orders`, {
+        method: 'GET',
+        headers: config.headers,
+      });
+      const data = await response.json();
+      if (data.success) {
+        return data.data;
+      } else {
+        return thunkAPI.rejectWithValue(data.message);
       }
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.message);
     }
-  );
-  
-  // Update order status ADMIN
-  export const updateOrderStatus = createAsyncThunk(
-    'order/updateOrderStatus',
-    async ({ orderId, newStatus, db }, thunkAPI) => {
-      try {
-        // Retrieve token from SQLite
-        const token = await getToken(db);
-        const config = {
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-        };
-  
-        // Make the API call with the token included in headers
-        const response = await axios.put(
-          `${apiURL}/api/orders/${orderId}`,
-          { status: newStatus },
-          config
-        );
-  
-        if (response.data.success) {
-          return response.data.data;
-        } else {
-          return thunkAPI.rejectWithValue(response.data.message || 'Update failed');
-        }
-      } catch (error) {
-        return thunkAPI.rejectWithValue(error.message);
+  }
+);
+
+// Update order status ADMIN
+export const updateOrderStatus = createAsyncThunk(
+  'order/updateOrderStatus',
+  async ({ orderId, newStatus, db }, thunkAPI) => {
+    try {
+      const token = await getToken(db);
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      };
+
+      const response = await axios.put(
+        `${apiURL}/api/orders/${orderId}`,
+        { status: newStatus },
+        config
+      );
+
+      if (response.data.success) {
+        return response.data.data;
+      } else {
+        return thunkAPI.rejectWithValue(response.data.message || 'Update failed');
       }
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.message);
     }
-  );
+  }
+);
+
+export const clearCurrentOrder = () => ({ type: 'order/clearCurrentOrder' });
