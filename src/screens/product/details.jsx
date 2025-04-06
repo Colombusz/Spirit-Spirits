@@ -51,7 +51,8 @@ const Details = () => {
     try {
       const user = await getUserCredentials();
       if (!user) {
-        console.error('User not found in AsyncStorage');
+        // console.error('User not found in AsyncStorage');
+        console.log('User not found in AsyncStorage');
         Toasthelper.showError('Please log in to add items to your cart.');
         navigation.navigate('Login');
         return;
@@ -69,7 +70,8 @@ const Details = () => {
     try {
       const user = await getUserCredentials();
       if (!user) {
-        console.error('User not found in AsyncStorage');
+        // console.error('User not found in AsyncStorage');
+        console.log('User not found in AsyncStorage');
         Toasthelper.showError('Please log in to view your cart.');
         navigation.navigate('Login');
         return;

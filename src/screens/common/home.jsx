@@ -107,7 +107,7 @@ const Home = () => {
       
       <View style={styles.header}>
         <View style={styles.titleContainer}>
-          <Title style={styles.appTitle}>Spirit Spirits</Title>
+          <Title style={styles.appTitle}>Spirit & Spirits</Title>
           <Icon name="glass-wine" size={24} color={colors.primary} style={styles.titleIcon} />
         </View>
         <Paragraph style={styles.subtitle}>

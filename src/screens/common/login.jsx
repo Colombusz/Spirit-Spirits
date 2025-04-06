@@ -133,7 +133,7 @@ const Login = () => {
             resizeMode="contain"
           />
         </View>
-          <Text style={styles.appName}>Spirits & Spirits</Text>
+          <Text style={styles.appName}>Spirit & Spirits</Text>
         </View>
 
         <Text style={styles.title}>Welcome Back</Text>

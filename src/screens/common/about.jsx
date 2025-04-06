@@ -53,12 +53,12 @@ const About = () => {
 
         {/* Title & Content */}
         <View style={styles.contentWrapper}>
-          <Text style={styles.title}>Spirits & Spirits</Text>
+          <Text style={styles.title}>Spirit & Spirits</Text>
           
           <View style={styles.divider} />
           
           <Text style={styles.paragraph}>
-            Welcome to Spirits & Spirits, your premier destination for fine wines, premium liquors, and craft spirits.
+            Welcome to Spirit & Spirits, your premier destination for fine wines, premium liquors, and craft spirits.
             We are passionate about bringing you the best selection of beverages from around the world, carefully curated
             to suit every taste and occasion.
           </Text>
@@ -70,7 +70,7 @@ const About = () => {
           </View>
           
           <Text style={styles.paragraph}>
-            At Spirits & Spirits, we believe in the artistry of fine spirits. Whether you're celebrating a special moment,
+            At Spirit & Spirits, we believe in the artistry of fine spirits. Whether you're celebrating a special moment,
             hosting a gathering, or simply enjoying a quiet evening, we are here to help you find the perfect drink to
             elevate your experience.
           </Text>
@@ -109,7 +109,7 @@ const About = () => {
           </Text>
           
           <Text style={styles.paragraph}>
-            Thank you for choosing Spirits & Spirits. Cheers to great moments and unforgettable memories!
+            Thank you for choosing Spirit & Spirits. Cheers to great moments and unforgettable memories!
           </Text>
         </View>
         
@@ -141,7 +141,7 @@ const About = () => {
         
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>© {new Date().getFullYear()} Spirits & Spirits</Text>
+          <Text style={styles.footerText}>© {new Date().getFullYear()} Spirit & Spirits</Text>
           <Text style={styles.footerText}>All rights reserved</Text>
           
           <View style={styles.socialContainer}>

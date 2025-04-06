@@ -6,6 +6,7 @@ import { createLiquor } from '../../redux/slices/createLiqourSlice.js';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import styles from './createStyle';
+import Toasthelper from '../../components/common/toasthelper.jsx';
 
 // Custom theme with bronze color palette
 const bronzeTheme = {
@@ -146,6 +147,7 @@ export default function App() {
         // Add a small delay to show the success message before navigating
         setTimeout(() => {
             setIsLoading(false);
+            Toasthelper.showSuccess("Product submitted successfully!", "Your product has been added.");
             navigation.navigate('Adminhome');
         }, 1500);
     } catch (error) {

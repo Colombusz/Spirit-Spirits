@@ -198,7 +198,7 @@ const AppDrawer = ({ closeDrawer, navigation }) => {
 
           {/* APP VERSION FOOTER */}
           <View style={styles.footer}>
-          <Caption style={styles.versionText}>Spirits & Spirits</Caption>
+          <Caption style={styles.versionText}>Spirit & Spirits</Caption>
             <Caption style={styles.versionText}>App Version 1.0.0</Caption>
           </View>
         </View>
