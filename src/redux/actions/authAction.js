@@ -1,18 +1,20 @@
 // actions/authAction.js
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import Constants from 'expo-constants';
-import { storeToken, removeToken } from '../../utils/storage';
+import { storeToken, removeToken, getToken } from '../../utils/storage';
 import { removeUserCredentials, storeUserCredentials } from '../../utils/userStorage';
-import { useNavigation } from '@react-navigation/native';
 const apiURL = Constants.expoConfig.extra?.BACKEND_URL || 'http://192.168.1.123:5000';
 
 export const loginUser = createAsyncThunk(
   'auth/login',
   async ({ email, password, db }, thunkAPI) => {
     try {
+      const token = await getToken(db);
       const res = await fetch(`${apiURL}/api/auth/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+         },
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
@@ -41,7 +43,6 @@ export const signupUser = createAsyncThunk('auth/signup',
       });
       const data = await res.json();
       if (data.success) {
-        // Optionally, you can auto-login the user here by returning data.user
         return data.user;
       } else {
         return thunkAPI.rejectWithValue(data.message);

@@ -2,6 +2,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import Constants from 'expo-constants';
 import { getUserCredentials, storeUserCredentials } from '../../utils/userStorage';
+import { getToken } from '../../utils/storage';
 
 const apiURL = Constants.expoConfig.extra?.BACKEND_URL || 'http://192.168.1.123:5000';
 
@@ -26,8 +27,9 @@ export const fetchCurrentUser = createAsyncThunk(
 
 export const updateProfile = createAsyncThunk(
   'user/updateProfile',
-  async ({ user }, thunkAPI) => {
+  async ({ user, db }, thunkAPI) => {
     try {
+      const token = await getToken(db);
       const formData = new FormData();
       formData.append('userId', user._id || user.id);
       formData.append('username', user.username);
@@ -51,10 +53,18 @@ export const updateProfile = createAsyncThunk(
         formData.append('image', { uri: localUri, name: filename, type });
       }
       
-      const res = await fetch(`${apiURL}/api/auth/update-profile`, {
+      // const res = await fetch(`${apiURL}/api/auth/update-profile`, {
+      //   method: 'PUT',
+      //   body: formData,
+      // });
+      const config = {
         method: 'PUT',
         body: formData,
-      });
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      };
+      const res = await fetch(`${apiURL}/api/auth/update-profile`, config);
       const data = await res.json();
 
       if (data.success) {

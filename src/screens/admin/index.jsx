@@ -7,6 +7,7 @@ import CardItem from '../../components/admin/admincard';
 import { Searchbar, FAB } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { deleteLiquor } from '../../redux/actions/liquorAction'; // Import the deleteLiquor action
+import { useAsyncSQLiteContext } from '../../utils/asyncSQliteProvider';
 import { Alert } from 'react-native';
 export default function HomeIndex() {
   const dispatch = useDispatch();
@@ -14,6 +15,7 @@ export default function HomeIndex() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredLiquors, setFilteredLiquors] = useState([]);
   const navigation = useNavigation();
+  const db = useAsyncSQLiteContext();
 
   // Fetch liquors initially when the component mounts
   useEffect(() => {
@@ -68,7 +70,7 @@ export default function HomeIndex() {
           onPress: async () => {
             try {
               // Proceed with deletion
-              await dispatch(deleteLiquor(id));
+              await dispatch(deleteLiquor({ liquorId: id, db }));
   
               // Immediately update filteredLiquors state after deletion
               setFilteredLiquors((prevLiquors) =>

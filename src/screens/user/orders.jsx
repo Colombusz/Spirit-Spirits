@@ -27,6 +27,7 @@ import Toast from 'react-native-toast-message';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors, spacing } from '../../components/common/theme.js';
 import { getUserCredentials } from '../../utils/userStorage';
+import { useAsyncSQLiteContext } from '../../utils/asyncSQliteProvider.js';
 
 // Star Rating Component
 const StarRating = ({ rating, setRating, editable = false, size = 24 }) => {
@@ -97,6 +98,7 @@ const UserOrders = () => {
   const dispatch = useDispatch();
   const { orders, loading, error } = useSelector((state) => state.order);
   const [refreshing, setRefreshing] = useState(false);
+  const db = useAsyncSQLiteContext();
 
   // For order details modal
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -154,7 +156,7 @@ const UserOrders = () => {
         { 
           text: 'Yes', 
           onPress: () => {
-            dispatch(updateOrderStatus({ orderId, status: newStatus }))
+            dispatch(updateOrderStatus({ orderId, status: newStatus, db }))
               .unwrap()
               .then(() => {
                 Toast.show({
@@ -228,7 +230,7 @@ const UserOrders = () => {
 
     if (isEditingReview && selectedItem.review && selectedItem.review._id) {
         // Update existing review
-        dispatch(updateReview({ reviewId: selectedItem.review._id, reviewDetails: reviewData }))
+        dispatch(updateReview({ reviewId: selectedItem.review._id, reviewDetails: reviewData , db }))
           .unwrap()
           .then((updatedReview) => {
             Toast.show({
@@ -254,7 +256,7 @@ const UserOrders = () => {
           });
       } else {
         // Create new review
-        dispatch(createReview({ reviewDetails: reviewData }))
+        dispatch(createReview({ reviewDetails: reviewData, db }))
           .unwrap()
           .then((newReview) => {
             Toast.show({

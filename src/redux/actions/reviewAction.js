@@ -1,24 +1,28 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import Constants from 'expo-constants';
+import axios from 'axios';
+import { getToken } from '../../utils/storage';
 
 const apiURL = Constants.expoConfig.extra?.BACKEND_URL || 'http://192.168.1.123:5000';
 
-// Create a new review
 export const createReview = createAsyncThunk(
   'review/createReview',
-  async ({ reviewDetails }, thunkAPI) => {
+  async ({ reviewDetails, db }, thunkAPI) => {
     try {
       console.log('Creating review:', reviewDetails);
-      const res = await fetch(`${apiURL}/api/reviews`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(reviewDetails),
-      });
-      const data = await res.json();
-      if (data.success) {
-        return data.data;
+      const token = await getToken(db);
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      };
+      const response = await axios.post(`${apiURL}/api/reviews`, reviewDetails, config);
+      // axios response data is in response.data
+      if (response.data.success) {
+        return response.data.data;
       } else {
-        return thunkAPI.rejectWithValue(data.message);
+        return thunkAPI.rejectWithValue(response.data.message);
       }
     } catch (error) {
       return thunkAPI.rejectWithValue(error.message);
@@ -26,21 +30,22 @@ export const createReview = createAsyncThunk(
   }
 );
 
-// Update an existing review
 export const updateReview = createAsyncThunk(
   'review/updateReview',
-  async ({ reviewId, reviewDetails }, thunkAPI) => {
+  async ({ reviewId, reviewDetails, db }, thunkAPI) => {
     try {
-      const res = await fetch(`${apiURL}/api/reviews/${reviewId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(reviewDetails),
-      });
-      const data = await res.json();
-      if (data.success) {
-        return data.data;
+      const token = await getToken(db);
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      };
+      const response = await axios.put(`${apiURL}/api/reviews/${reviewId}`, reviewDetails, config);
+      if (response.data.success) {
+        return response.data.data;
       } else {
-        return thunkAPI.rejectWithValue(data.message);
+        return thunkAPI.rejectWithValue(response.data.message);
       }
     } catch (error) {
       return thunkAPI.rejectWithValue(error.message);

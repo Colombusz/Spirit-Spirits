@@ -53,11 +53,8 @@ export const getToken = async (dbInstance) => {
     return null;
   }
   try {
-    const result = await dbInstance.getFirstAsync(
-      "SELECT token FROM users ORDER BY id DESC LIMIT 1;"
-    );
-    console.log("Retrieved token:", result.token);
-    return result ? result.token : null;
+    const result = await dbInstance.getFirstAsync("SELECT token FROM users LIMIT 1;");
+    return result?.token || null;
   } catch (error) {
     console.error("Error retrieving token", error);
     return null;

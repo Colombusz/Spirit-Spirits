@@ -58,8 +58,9 @@ const Home = () => {
       search: searchQuery,
       category: selectedCategory,
       sort: priceSort,
+      db,
     }));
-  }, [dispatch, searchQuery, selectedCategory, priceSort]);
+  }, [dispatch, searchQuery, selectedCategory, priceSort, db]);
 
   const handleSearchChange = (text) => {
     setSearchQuery(text);

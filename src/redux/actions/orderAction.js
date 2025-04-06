@@ -1,6 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import Constants from 'expo-constants';
 import { removeMultipleCartItems } from '../../utils/storage';
+import { getToken } from '../../utils/storage';
 
 const apiURL = Constants.expoConfig.extra?.BACKEND_URL || 'http://192.168.1.123:5000';
 
@@ -29,11 +30,16 @@ export const createOrder = createAsyncThunk(
         formData.append('proofOfPayment', { uri: localUri, name: filename, type });
       }
       
-      const res = await fetch(`${apiURL}/api/orders`, {
+      const token = await getToken(db);
+      const config = {
         method: 'POST',
         body: formData,
-        // Let fetch automatically set the Content-Type header
-      });
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      };
+
+      const res = await fetch(`${apiURL}/api/orders`, config);
       const data = await res.json();
 
       const productIds = orderDetails.selectedProducts.map(item => item.productId);
@@ -70,18 +76,28 @@ export const fetchOrders = createAsyncThunk(
   // Update order status ADMIN
   export const updateOrderStatus = createAsyncThunk(
     'order/updateOrderStatus',
-    async ({ orderId, newStatus }, thunkAPI) => {
+    async ({ orderId, newStatus, db }, thunkAPI) => {
       try {
-        const res = await fetch(`${apiURL}/api/orders/${orderId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: newStatus }),
-        });
-        const data = await res.json();
-        if (data.success) {
-          return data.data;
+        // Retrieve token from SQLite
+        const token = await getToken(db);
+        const config = {
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        };
+  
+        // Make the API call with the token included in headers
+        const response = await axios.put(
+          `${apiURL}/api/orders/${orderId}`,
+          { status: newStatus },
+          config
+        );
+  
+        if (response.data.success) {
+          return response.data.data;
         } else {
-          return thunkAPI.rejectWithValue(data.message);
+          return thunkAPI.rejectWithValue(response.data.message || 'Update failed');
         }
       } catch (error) {
         return thunkAPI.rejectWithValue(error.message);

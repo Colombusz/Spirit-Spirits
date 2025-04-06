@@ -2,6 +2,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import Constants from 'expo-constants';
 import axios from 'axios';
+import { getToken } from '../../utils/storage';
 
 const apiURL = Constants.expoConfig.extra?.BACKEND_URL || 'http://192.168.0.155:5000';
 
@@ -21,8 +22,7 @@ export const fetchLiquors = createAsyncThunk(
       });
       const data = await response.json();
       if (data.success) {
-       
-        return data.data; // assuming the liquors are in data.data
+        return data.data;
       } else {
         return thunkAPI.rejectWithValue(data.message);
       }
@@ -52,58 +52,49 @@ export const fetchLiquorById = createAsyncThunk(
   }
 );
 
-
 export const updateLiquorById = createAsyncThunk(
   'liquor/updateLiquorById',
-  async ({ liquorId, updatedData }, thunkAPI) => {
+  async ({ liquorId, updatedData, db }, thunkAPI) => {
     try {
+      const token = await getToken(db);
       const config = {
         headers: {
-          'Content-Type': 'multipart/form-data', // for file uploads
+          'Content-Type': 'multipart/form-data',
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
-        timeout: 15000,
       };
 
       console.log(`Updating liquor with ID: ${liquorId}`);
-      console.log('Updated Data:', updatedData); // Log the data you're sending
-
+      console.log('Updated Data:', updatedData);
       const response = await axios.put(`${apiURL}/api/liquors/${liquorId}`, updatedData, config);
-
-      console.log('Response:', response); // Log the entire response
-
+      console.log('Response:', response);
       if (response.data.success) {
-        return response.data.data; // Return the updated data
+        return response.data.data;
       } else {
-        console.log('Update failed:', response.data.message);
         return thunkAPI.rejectWithValue(response.data.message || 'Update failed');
       }
     } catch (error) {
-      console.error('Error in updating liquor:', error);
-
-      
-
-      // Ensure that the error is logged within the catch block
-      console.error('Caught error:', serializableError);
-
-      
+      return thunkAPI.rejectWithValue(error.message);
     }
   }
 );
 
 export const deleteLiquor = createAsyncThunk(
   'liquor/deleteLiquor',
-  async (liquorId, thunkAPI) => {
+  async ({ liquorId, db }, thunkAPI) => {
     try {
-      const response = await fetch(`${apiURL}/api/liquors/${liquorId}`, {
-        method: 'DELETE',
-      });
-      const data = await response.json();
-      if (data.success) {
-        fetchLiquors();
-         // Refresh the list of liquors after deletion
-        return liquorId; // Return the ID of the deleted liquor
+      const token = await getToken(db);
+      const config = {
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      };
+
+      const response = await axios.delete(`${apiURL}/api/liquors/${liquorId}`, config);
+      if (response.data.success) {
+        return liquorId;
       } else {
-        return thunkAPI.rejectWithValue(data.message);
+        return thunkAPI.rejectWithValue(response.data.message);
       }
     } catch (error) {
       return thunkAPI.rejectWithValue(error.message);

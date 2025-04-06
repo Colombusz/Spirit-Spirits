@@ -6,6 +6,7 @@ import * as ImagePicker from 'expo-image-picker';
 import styles from './createStyle';
 import { useNavigation } from '@react-navigation/native';
 import { updateLiquorById } from '../../redux/actions/liquorAction';
+import { useAsyncSQLiteContext } from '../../utils/asyncSQliteProvider';
 
 const bronzeTheme = {
   ...DefaultTheme,
@@ -25,6 +26,7 @@ export default function EditLiquor({ route }) {
   const liquor = route.params?.liquor || {};
   const dispatch = useDispatch();
   const navigation = useNavigation();
+  const db = useAsyncSQLiteContext();
 
   const [name, setName] = React.useState(liquor.name || '');
   const [price, setPrice] = React.useState(liquor.price ? liquor.price.toString() : '');
@@ -144,7 +146,7 @@ export default function EditLiquor({ route }) {
     });
   
     try {
-      const response = await dispatch(updateLiquorById({ liquorId: liquor._id, updatedData: formData }));
+      const response = await dispatch(updateLiquorById({ liquorId: liquor._id, updatedData: formData, db }));
   
       // Set loading to false regardless of outcome
       setIsLoading(false);
