@@ -33,13 +33,14 @@ export const loginUser = createAsyncThunk(
   }
 );
 
-export const signupUser = createAsyncThunk('auth/signup',
-  async ({ username, firstname, lastname, email, password }, thunkAPI) => {
+export const signupUser = createAsyncThunk(
+  'auth/signup',
+  async ({ username, firstname, lastname, email, password, address, phone, image }, thunkAPI) => {
     try {
       const res = await fetch(`${apiURL}/api/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, firstname, lastname, email, password }),
+        body: JSON.stringify({ username, firstname, lastname, email, password, address, phone, image }),
       });
       const data = await res.json();
       if (data.success) {
