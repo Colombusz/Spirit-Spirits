@@ -4,6 +4,7 @@ import { loginUser, signupUser, logoutUser, googleLogin } from '../actions/authA
 
 const initialState = {
   user: null,
+  orders: [],
   loading: false,
   error: null,
 };
@@ -55,8 +56,7 @@ const authSlice = createSlice({
       })
       .addCase(signupUser.fulfilled, (state, action) => {
         state.loading = false;
-        // Optionally auto-login after signup:
-        // state.user = action.payload;
+        state.user = action.payload;
       })
       .addCase(signupUser.rejected, (state, action) => {
         state.loading = false;

@@ -49,3 +49,42 @@ export const createOrder = createAsyncThunk(
     }
   }
 );
+
+export const fetchOrders = createAsyncThunk(
+    'order/fetchOrders',
+    async (_, thunkAPI) => {
+      try {
+        const res = await fetch(`${apiURL}/api/orders`);
+        const data = await res.json();
+        if (data.success) {
+          return data.data;
+        } else {
+          return thunkAPI.rejectWithValue(data.message);
+        }
+      } catch (error) {
+        return thunkAPI.rejectWithValue(error.message);
+      }
+    }
+  );
+  
+  // Update order status ADMIN
+  export const updateOrderStatus = createAsyncThunk(
+    'order/updateOrderStatus',
+    async ({ orderId, newStatus }, thunkAPI) => {
+      try {
+        const res = await fetch(`${apiURL}/api/orders/${orderId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          return data.data;
+        } else {
+          return thunkAPI.rejectWithValue(data.message);
+        }
+      } catch (error) {
+        return thunkAPI.rejectWithValue(error.message);
+      }
+    }
+  );

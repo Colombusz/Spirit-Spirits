@@ -6,13 +6,12 @@ import {
   TextInput,
   Button,
   StyleSheet,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import Constants from 'expo-constants';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useAsyncSQLiteContext } from '../../utils/asyncSQliteProvider';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 
 import { auth } from '../../utils/firebaseConfig';
 import {
@@ -26,14 +25,10 @@ import { loginUser, googleLogin } from '../../redux/actions/authAction';
 import { Toasthelper } from '../../components/common/toasthelper';
 import Toast from 'react-native-toast-message';
 
-import { useSelector } from 'react-redux';
-
 const Login = () => {
-  const usercred = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const db = useAsyncSQLiteContext();
   const navigation = useNavigation();
- 
 
   if (!db) {
     console.warn('Database is not initialized yet.');
@@ -43,25 +38,33 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { extra: { BACKEND_URL } = {} } = Constants.expoConfig;
-  // apiURL is now only used for any non-redux logic
   const apiURL = BACKEND_URL || 'http://192.168.1.123:5000';
 
+  const navigateAfterLogin = (user) => {
+    // Use CommonActions.reset to rebuild the navigation state based on updated user data
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: user?.isAdmin ? 'Adminhome' : 'Home' }],
+      })
+    );
+  };
+
   const handleLogin = () => {
-    const usercred = dispatch(loginUser({ email, password, db }))
+    setIsSubmitting(true);
+    dispatch(loginUser({ email, password, db }))
       .unwrap()
       .then((user) => {
         Toasthelper.showSuccess('Login Successful');
+        console.log('Logged in user:', user);
+        navigateAfterLogin(user);
       })
       .catch((error) => {
-        Toasthelper.showError('Login Failed', error.message);
+        Toasthelper.showError('Login Failed: Invalid Credentials', error.message);
+      })
+      .finally(() => {
+        setIsSubmitting(false);
       });
-
-      if (usercred.currentUser.isAdmin === true) {
-        navigation.navigate('Adminhome');
-      }
-      else{
-        navigation.navigate('Home');
-      }
   };
 
   const handleGoogleSignIn = async () => {
@@ -76,25 +79,16 @@ const Login = () => {
         const userCredential = await signInWithCredential(auth, credential);
         const firebaseIdToken = await userCredential.user.getIdToken();
 
-        // Dispatch the googleLogin thunk passing the firebase token and database context.
-        const usercred = dispatch(googleLogin({ firebaseIdToken, db }))
+        dispatch(googleLogin({ firebaseIdToken, db }))
           .unwrap()
-          .then(() => {
+          .then((user) => {
             Toasthelper.showSuccess('Google Login Successful');
-           
+            navigateAfterLogin(user);
           })
-        .catch((error) => {
-          Toasthelper.showError('Google Login Failed', error.message);
-        });
+          .catch((error) => {
+            Toasthelper.showError('Google Login Failed', error.message);
+          });
       }
-      // console.log("WEWEWEWEWEEWE", usercred.currentUser);
-      if (usercred.currentUser.isAdmin === true) {
-        navigation.navigate('Adminhome');
-      }
-      else{
-        navigation.navigate('Home');
-      }
-
       setIsSubmitting(false);
     } catch (error) {
       setIsSubmitting(false);

@@ -31,17 +31,14 @@ const Signup = () => {
 
     setIsSubmitting(true);
     dispatch(signupUser({ username, firstname, lastname, email, password }))
-      .unwrap()
-      .then((user) => {
-        Alert.alert('Success', 'User created successfully. You may now login.');
-        navigation.navigate('Login');
-      })
-      .catch((error) => {
-        Alert.alert('Error', error);
-      })
-      .finally(() => {
-        setIsSubmitting(false);
-      });
+    .unwrap()
+    .then((user) => {
+      console.log('Signup successful:', user);
+      navigation.navigate('Login');
+    })
+    .catch((error) => {
+      console.error('Signup error:', error);
+    });
   };
 
   return (
