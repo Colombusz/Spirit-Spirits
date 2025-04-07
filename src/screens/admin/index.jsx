@@ -198,7 +198,7 @@ export default function HomeIndex() {
   const deliveredCount = orders?.filter(order => order.status?.toLowerCase() === 'delivered').length || 0;
 
   // Count promos
-  const promosCount = promos?.length || 0;
+  const promosCount = promos?.data?.length || 0;
   
   // Calculate total sales (from delivered orders)
   const deliveredOrders = orders?.filter(order => order.status?.toLowerCase() === 'delivered') || [];
@@ -786,7 +786,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.bronzeShade2,
     elevation: 0,
-    height: 42,
+    height: 60,
   },
   searchInput: {
     fontSize: 14,

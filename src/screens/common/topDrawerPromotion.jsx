@@ -121,12 +121,12 @@ const carouselStyles = StyleSheet.create({
 });
 
 const TopDrawer = ({ state, promotions = [], onClose }) => {
-  const translateY = useRef(new Animated.Value(state ? 0 : -height)).current; // Start off-screen
-  const maxHeight = height * 0.85; // Maximum height for the drawer (85% of screen height)
+  const translateY = useRef(new Animated.Value(state ? 0 : -height)).current;
+  const maxHeight = height * 0.7; // 70% of screen height
 
   useEffect(() => {
     Animated.timing(translateY, {
-      toValue: state ? 0 : -height, // Fully visible or slide out
+      toValue: state ? 0 : -height,
       duration: 300,
       useNativeDriver: true,
     }).start();
@@ -138,8 +138,8 @@ const TopDrawer = ({ state, promotions = [], onClose }) => {
         style={[
           styles.drawer,
           {
-            transform: [{ translateY }], // Adjust position dynamically
-            maxHeight: maxHeight,
+            transform: [{ translateY }],
+            height: maxHeight, // Set fixed height instead of maxHeight
           },
         ]}
       >
@@ -149,25 +149,26 @@ const TopDrawer = ({ state, promotions = [], onClose }) => {
             icon="close"
             size={24}
             color={theme.colors.text}
-            onPress={onClose} // Call onClose when close button is pressed
+            onPress={onClose}
             style={styles.closeButton}
           />
         </Surface>
 
-        {/* Ensure ScrollView takes up available space */}
+        {/* Scrollable content area */}
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollViewContent}
           showsVerticalScrollIndicator={true}
-          bounces={false}
+          bounces={true}
+          nestedScrollEnabled={true} // Enable nested scrolling
         >
           {promotions.map((promo) => {
             const imageArray = Array.isArray(promo.images) 
               ? promo.images 
-              : [{ url: promo.images }]; // Ensure we have objects with url property
+              : [{ url: promo.images }];
               
             return (
-              <Card key={promo.id} style={styles.card}>
+              <Card key={promo._id} style={styles.card}>
                 <ImageCarousel images={imageArray} />
                 <Card.Content>
                   <Title style={styles.cardTitle}>{promo.title}</Title>
@@ -200,7 +201,7 @@ const TopDrawer = ({ state, promotions = [], onClose }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9f4e2', // Light cream background
+    backgroundColor: '#f9f4e2',
   },
   content: {
     flex: 1,
@@ -209,14 +210,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   openButton: {
-    backgroundColor: '#cd7f32', // Primary copper color
+    backgroundColor: '#cd7f32',
   },
   drawer: {
     position: 'absolute',
-    top: 0,
+    top: 100,
     left: 0,
     right: 0,
-    backgroundColor: '#f7f0d9', // Slightly darker cream for drawer
+    backgroundColor: '#f7f0d9',
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     elevation: 10,
@@ -224,21 +225,20 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
-    flex: 1, // Allow the drawer to expand fully
     flexDirection: 'column',
-    overflow: 'hidden', // Prevent content from spilling out
+    overflow: 'hidden', // Changed from 'scroll' to 'hidden'
   },
   drawerHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 10,
-    backgroundColor: '#cd7f32', // Primary copper color
+    backgroundColor: '#cd7f32',
     borderBottomWidth: 1,
-    borderBottomColor: '#b9722d', // Slightly darker copper
+    borderBottomColor: '#b9722d',
   },
   drawerTitle: {
-    color: '#f6eed4', // Light cream for text on copper
+    color: '#f6eed4',
     marginLeft: 10,
     fontWeight: 'bold',
   },
@@ -246,32 +246,33 @@ const styles = StyleSheet.create({
     margin: 0,
   },
   scrollView: {
-    flex: 1, // Takes up all available space between header and footer
+    flex: 1, // Takes remaining space between header and footer
   },
   scrollViewContent: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 20,
     paddingVertical: 15,
+    paddingBottom: 20, // Extra padding at bottom for better scrolling experience
   },
   card: {
     marginBottom: 15,
-    backgroundColor: '#f6eed4', // Cream color for cards
+    backgroundColor: '#f6eed4',
     borderRadius: 10,
-    overflow: 'hidden',
+    overflow: 'hidden', // Changed from 'auto' to 'hidden'
     borderWidth: 1,
     borderColor: '#f5eccf',
-    padding: 10,
+    elevation: 3,
   },
   cardTitle: {
-    color: '#674019', // Dark brown for titles
+    color: '#674019',
     fontWeight: 'bold',
     marginTop: 5,
   },
   cardDescription: {
-    color: '#7b4c1e', // Medium brown for descriptions
+    color: '#7b4c1e',
     marginBottom: 8,
   },
   validUntil: {
-    color: '#a46628', // Darker copper for validity text
+    color: '#a46628',
     fontSize: 12,
     marginTop: 5,
     fontStyle: 'italic',
@@ -282,7 +283,7 @@ const styles = StyleSheet.create({
   drawerFooter: {
     alignItems: 'center',
     paddingVertical: 10,
-    backgroundColor: '#cd7f32', // Primary copper color
+    backgroundColor: '#cd7f32',
   },
   pullTab: {
     width: 50,

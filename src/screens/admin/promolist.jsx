@@ -13,10 +13,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { getAllPromos, deletePromo } from '../../redux/actions/promoAction';
-// You'll need to import the delete action as well
-// import { deletePromo } from '../../redux/actions/promoAction';
 
 const COLORS = {
   primary: '#cd7f32',
@@ -194,6 +192,12 @@ const PromosScreen = () => {
   const navigation = useNavigation();
 
   const { promos, loading, error } = useSelector((state) => state.promo);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      dispatch(getAllPromos()); // Re-fetch promos when the screen is focused
+    }, [dispatch])
+  );
 
   useEffect(() => {
     dispatch(getAllPromos());

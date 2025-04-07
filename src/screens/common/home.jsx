@@ -333,16 +333,17 @@ const Home = () => {
           </TouchableOpacity>
         </View>
       ) : (
-        <FlatList
-          data={liquors}
-          keyExtractor={(item) => item._id}
-          renderItem={renderLiquorItem}
-          numColumns={2}
-          columnWrapperStyle={styles.columnWrapper}
-          contentContainerStyle={styles.list}
-          ListEmptyComponent={renderEmptyList}
-          showsVerticalScrollIndicator={false}
-        />
+      <FlatList
+        data={liquors}
+        keyExtractor={(item) => item._id}
+        renderItem={renderLiquorItem}
+        numColumns={2}
+        columnWrapperStyle={styles.columnWrapper}
+        contentContainerStyle={styles.list}
+        ListEmptyComponent={renderEmptyList}
+        showsVerticalScrollIndicator={false}
+        scrollEnabled={!drawerOpen} // Disable scrolling when drawer is open
+      />  
       )}
 
       {/* FAB with promo icon */}
@@ -354,12 +355,15 @@ const Home = () => {
         onPress={toggleDrawer} // Toggle drawer on FAB press
       />
 
-      {/* TopDrawer */}
-      <TopDrawer
-        state={drawerOpen} // Pass drawerOpen state
-        promotions={promoData}
-        onClose={toggleDrawer} // Pass toggleDrawer to handle close
-      />
+        {drawerOpen && (
+          <View style={StyleSheet.absoluteFill} pointerEvents="auto">
+            <TopDrawer
+              state={drawerOpen}
+              promotions={promoData}
+              onClose={toggleDrawer}
+            />
+          </View>
+        )}
     </View> 
   );
 };
