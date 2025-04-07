@@ -132,7 +132,7 @@ const CardItem = ({ liquor, onDelete }) => { // Receive handleDeleteLiquor as a 
               </Text>
             )}
             {liquor.price && (
-              <Text style={styles.priceText}>${liquor.price}</Text>
+              <Text style={styles.priceText}>₱{liquor.price}</Text>
             )}
           </View>
         </Card.Content>
