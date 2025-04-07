@@ -1,48 +1,51 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, ScrollView, SafeAreaView, TouchableOpacity, Modal } from 'react-native';
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  StyleSheet, 
+  Text, 
+  View, 
+  ScrollView, 
+  SafeAreaView, 
+  TouchableOpacity, 
+  Modal, 
+  Alert 
+} from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchLiquors } from '../../redux/actions/liquorAction';
+import { fetchLiquors, deleteLiquor } from '../../redux/actions/liquorAction';
 import { fetchOrders } from '../../redux/actions/orderAction';
 import { getAllPromos } from '../../redux/actions/promoAction';
 import CardItem from '../../components/admin/admincard';
 import { Searchbar, FAB, Chip, Menu, Button, Divider } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
-import { deleteLiquor } from '../../redux/actions/liquorAction';
 import { useAsyncSQLiteContext } from '../../utils/asyncSQliteProvider';
-import { Alert } from 'react-native';
-import { colors } from '../../components/common/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { colors } from '../../components/common/theme';
 
 export default function HomeIndex() {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const db = useAsyncSQLiteContext();
 
-  // Existing liquors state and filtering
+  // Redux state for liquors, orders and promos
   const { liquors, loading, error } = useSelector((state) => state.liquor);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filteredLiquors, setFilteredLiquors] = useState([]);
-  
-  // Dashboard states from orders and promos
   const { orders } = useSelector((state) => state.order);
   const { promos } = useSelector((state) => state.promo);
 
-  // Filter states for liquors
+  // Local state for search and filter selections
+  const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
-  const [categoryMenuVisible, setCategoryMenuVisible] = useState(false);
   const [priceRange, setPriceRange] = useState({ min: 0, max: 10000 });
-  const [priceMenuVisible, setPriceMenuVisible] = useState(false);
   const [stockFilter, setStockFilter] = useState('All');
-  const [stockMenuVisible, setStockMenuVisible] = useState(false);
-  const [activeFilters, setActiveFilters] = useState([]);
 
-  // Modal visibility states
+  // Local state for menu visibility and modals
+  const [categoryMenuVisible, setCategoryMenuVisible] = useState(false);
+  const [priceMenuVisible, setPriceMenuVisible] = useState(false);
+  const [stockMenuVisible, setStockMenuVisible] = useState(false);
   const [metricsModalVisible, setMetricsModalVisible] = useState(false);
   const [orderStatusModalVisible, setOrderStatusModalVisible] = useState(false);
   const [inventoryStatusModalVisible, setInventoryStatusModalVisible] = useState(false);
 
-  // Categories, price ranges and stock options
+  // Define filter options
   const categories = [
     'All',
     'Vodka',
@@ -75,58 +78,56 @@ export default function HomeIndex() {
     { label: 'Out of Stock', value: 'OutOfStock' },
   ];
 
-  // Fetch liquors, orders and promos when component mounts or screen is focused
+  // Data fetching: initial fetch and on screen focus
   useEffect(() => {
-    dispatch(fetchLiquors());
-    dispatch(fetchOrders({ db }));
-    dispatch(getAllPromos());
-  }, [dispatch]);
-
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      console.log('Screen is focused, refreshing data...');
+    const fetchData = () => {
       dispatch(fetchLiquors());
       dispatch(fetchOrders({ db }));
       dispatch(getAllPromos());
+    };
+
+    fetchData();
+
+    const unsubscribe = navigation.addListener('focus', () => {
+      console.log('Screen is focused, refreshing data...');
+      fetchData();
     });
+
     return unsubscribe;
   }, [navigation, dispatch, db]);
 
-  // Apply filters and search on liquors
-  useEffect(() => {
-    if (liquors && liquors.length > 0) {
-      let filtered = [...liquors];
-      if (searchQuery.trim() !== '') {
-        filtered = filtered.filter((liquor) =>
-          liquor.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (liquor.name && liquor.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-          (liquor.description && liquor.description.toLowerCase().includes(searchQuery.toLowerCase()))
-        );
-      }
-      if (categoryFilter !== 'All') {
-        filtered = filtered.filter((liquor) => liquor.category === categoryFilter);
-      }
-      filtered = filtered.filter((liquor) => 
-        liquor.price >= priceRange.min && liquor.price <= priceRange.max
-      );
-      if (stockFilter !== 'All') {
-        if (stockFilter === 'InStock') {
-          filtered = filtered.filter((liquor) => liquor.stock > 0);
-        } else if (stockFilter === 'LowStock') {
-          filtered = filtered.filter((liquor) => liquor.stock > 0 && liquor.stock <= 10);
-        } else if (stockFilter === 'OutOfStock') {
-          filtered = filtered.filter((liquor) => liquor.stock === 0);
-        }
-      }
-      setFilteredLiquors(filtered);
-    } else {
-      setFilteredLiquors([]);
-    }
-    updateActiveFilters();
-  }, [searchQuery, liquors, categoryFilter, priceRange, stockFilter]);
+  // Memoize filtered liquors based on search and filter options
+  const filteredLiquors = useMemo(() => {
+    if (!liquors || liquors.length === 0) return [];
+    let filtered = [...liquors];
 
-  // Update active filters for display
-  const updateActiveFilters = () => {
+    if (searchQuery.trim() !== '') {
+      filtered = filtered.filter((liquor) =>
+        liquor.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (liquor.name && liquor.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (liquor.description && liquor.description.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+    }
+    if (categoryFilter !== 'All') {
+      filtered = filtered.filter((liquor) => liquor.category === categoryFilter);
+    }
+    filtered = filtered.filter((liquor) => 
+      liquor.price >= priceRange.min && liquor.price <= priceRange.max
+    );
+    if (stockFilter !== 'All') {
+      if (stockFilter === 'InStock') {
+        filtered = filtered.filter((liquor) => liquor.stock > 0);
+      } else if (stockFilter === 'LowStock') {
+        filtered = filtered.filter((liquor) => liquor.stock > 0 && liquor.stock <= 10);
+      } else if (stockFilter === 'OutOfStock') {
+        filtered = filtered.filter((liquor) => liquor.stock === 0);
+      }
+    }
+    return filtered;
+  }, [liquors, searchQuery, categoryFilter, priceRange, stockFilter]);
+
+  // Memoize active filters for display
+  const activeFilters = useMemo(() => {
     const filters = [];
     if (categoryFilter !== 'All') {
       filters.push({ key: 'category', label: categoryFilter });
@@ -143,8 +144,8 @@ export default function HomeIndex() {
         filters.push({ key: 'stock', label: stockOption.label });
       }
     }
-    setActiveFilters(filters);
-  };
+    return filters;
+  }, [categoryFilter, priceRange, stockFilter]);
 
   const onChangeSearch = (query) => setSearchQuery(query);
 
@@ -163,9 +164,6 @@ export default function HomeIndex() {
           onPress: async () => {
             try {
               await dispatch(deleteLiquor({ liquorId: id, db }));
-              setFilteredLiquors((prevLiquors) =>
-                prevLiquors.filter((liquor) => liquor._id !== id)
-              );
               await dispatch(fetchLiquors());
             } catch (error) {
               console.error("Error during deletion:", error);
@@ -190,28 +188,17 @@ export default function HomeIndex() {
     else if (key === 'stock') setStockFilter('All');
   };
 
-  // Count orders by status (ensure status strings match your API's data)
+  // Dashboard metrics calculations
   const pendingCount = orders?.filter(order => order.status?.toLowerCase() === 'pending').length || 0;
   const shippingCount = orders?.filter(order => order.status?.toLowerCase() === 'shipping').length || 0;
   const shippedCount = orders?.filter(order => order.status?.toLowerCase() === 'shipped').length || 0;
   const cancelledCount = orders?.filter(order => order.status?.toLowerCase() === 'cancelled').length || 0;
   const deliveredCount = orders?.filter(order => order.status?.toLowerCase() === 'delivered').length || 0;
-
-  // Count promos
   const promosCount = promos?.data?.length || 0;
-  
-  // Calculate total sales (from delivered orders)
+
   const deliveredOrders = orders?.filter(order => order.status?.toLowerCase() === 'delivered') || [];
-  const totalSales = deliveredOrders.reduce((total, order) => {
-    return total + (order.total || 0);
-  }, 0);
-  
-  // Calculate total inventory value
-  const totalInventoryValue = liquors?.reduce((total, liquor) => {
-    return total + (liquor.price * liquor.stock || 0);
-  }, 0) || 0;
-  
-  // Calculate low stock items
+  const totalSales = deliveredOrders.reduce((total, order) => total + (order.total || 0), 0);
+  const totalInventoryValue = liquors?.reduce((total, liquor) => total + (liquor.price * liquor.stock || 0), 0) || 0;
   const lowStockCount = liquors?.filter(liquor => liquor.stock > 0 && liquor.stock <= 10).length || 0;
   const outOfStockCount = liquors?.filter(liquor => liquor.stock === 0).length || 0;
 
@@ -231,21 +218,8 @@ export default function HomeIndex() {
               <MaterialCommunityIcons name="close" size={24} color={colors.bronzeShade7} />
             </TouchableOpacity>
           </View>
-          
           <ScrollView style={styles.modalScrollView}>
             <View style={styles.metricsContainer}>
-              {/* Sales Card */}
-              <View style={styles.metricModalCard}>
-                <View style={styles.metricIconContainer}>
-                  <MaterialCommunityIcons name="cash-register" size={24} color={colors.ivory1} />
-                </View>
-                <View style={styles.metricContent}>
-                  <Text style={styles.metricLabel}>Total Sales</Text>
-                  <Text style={styles.metricValue}>₱{totalSales.toLocaleString()}</Text>
-                </View>
-              </View>
-
-              {/* Inventory Value Card */}
               <View style={styles.metricModalCard}>
                 <View style={styles.metricIconContainer}>
                   <MaterialCommunityIcons name="package-variant" size={24} color={colors.ivory1} />
@@ -255,8 +229,6 @@ export default function HomeIndex() {
                   <Text style={styles.metricValue}>₱{totalInventoryValue.toLocaleString()}</Text>
                 </View>
               </View>
-
-              {/* Orders Card */}
               <View style={styles.metricModalCard}>
                 <View style={styles.metricIconContainer}>
                   <MaterialCommunityIcons name="truck-delivery" size={24} color={colors.ivory1} />
@@ -266,8 +238,6 @@ export default function HomeIndex() {
                   <Text style={styles.metricValue}>{deliveredCount}</Text>
                 </View>
               </View>
-
-              {/* Active Promos Card */}
               <View style={styles.metricModalCard}>
                 <View style={styles.metricIconContainer}>
                   <MaterialCommunityIcons name="tag-multiple" size={24} color={colors.ivory1} />
@@ -279,7 +249,6 @@ export default function HomeIndex() {
               </View>
             </View>
           </ScrollView>
-          
           <Button
             mode="contained"
             onPress={() => setMetricsModalVisible(false)}
@@ -309,7 +278,6 @@ export default function HomeIndex() {
               <MaterialCommunityIcons name="close" size={24} color={colors.bronzeShade7} />
             </TouchableOpacity>
           </View>
-          
           <View style={styles.modalScrollView}>
             <View style={styles.orderStatusGrid}>
               <View style={styles.statusItem}>
@@ -338,7 +306,6 @@ export default function HomeIndex() {
                 <Text style={styles.statusValue}>{cancelledCount}</Text>
               </View>
             </View>
-            
             <View style={styles.orderDetailsSection}>
               <Text style={styles.sectionSubHeader}>Order Overview</Text>
               <View style={styles.orderDetailsItem}>
@@ -359,7 +326,6 @@ export default function HomeIndex() {
               </View>
             </View>
           </View>
-          
           <Button
             mode="contained"
             onPress={() => setOrderStatusModalVisible(false)}
@@ -389,7 +355,6 @@ export default function HomeIndex() {
               <MaterialCommunityIcons name="close" size={24} color={colors.bronzeShade7} />
             </TouchableOpacity>
           </View>
-          
           <View style={styles.modalScrollView}>
             <View style={styles.inventoryStatusGrid}>
               <View style={styles.inventoryModalItem}>
@@ -409,7 +374,6 @@ export default function HomeIndex() {
                 </Text>
               </View>
             </View>
-            
             <View style={styles.inventoryDetailsSection}>
               <Text style={styles.sectionSubHeader}>Inventory Details</Text>
               <View style={styles.inventoryDetailsItem}>
@@ -425,12 +389,10 @@ export default function HomeIndex() {
               <View style={styles.inventoryDetailsItem}>
                 <Text style={styles.inventoryDetailsLabel}>Stock Health</Text>
                 <Text style={styles.inventoryDetailsValue}>
-                  {liquors?.length ? 
-                    (((liquors.length - lowStockCount - outOfStockCount) / liquors.length) * 100).toFixed(1) : '0'}%
+                  {liquors?.length ? (((liquors.length - lowStockCount - outOfStockCount) / liquors.length) * 100).toFixed(1) : '0'}%
                 </Text>
               </View>
             </View>
-            
             {lowStockCount > 0 && (
               <View style={styles.inventoryAlertSection}>
                 <Text style={styles.inventoryAlertTitle}>
@@ -441,7 +403,6 @@ export default function HomeIndex() {
                 </Text>
               </View>
             )}
-            
             {outOfStockCount > 0 && (
               <View style={[styles.inventoryAlertSection, styles.outOfStockAlert]}>
                 <Text style={styles.inventoryAlertTitle}>
@@ -453,7 +414,6 @@ export default function HomeIndex() {
               </View>
             )}
           </View>
-          
           <Button
             mode="contained"
             onPress={() => setInventoryStatusModalVisible(false)}
@@ -487,7 +447,6 @@ export default function HomeIndex() {
           </View>
           <Text style={styles.quickActionText}>Metrics</Text>
         </TouchableOpacity>
-        
         <TouchableOpacity 
           style={styles.quickActionButton} 
           onPress={() => setOrderStatusModalVisible(true)}
@@ -497,7 +456,6 @@ export default function HomeIndex() {
           </View>
           <Text style={styles.quickActionText}>Order Status</Text>
         </TouchableOpacity>
-        
         <TouchableOpacity 
           style={styles.quickActionButton} 
           onPress={() => setInventoryStatusModalVisible(true)}
