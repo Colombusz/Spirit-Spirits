@@ -129,7 +129,7 @@ const AdminOrders = () => {
         <Card.Content style={styles.cardContent}>
           <View style={styles.infoRow}>
             <Icon name="account" size={18} color={colors.bronzeShade6} style={styles.infoIcon} />
-            <Text style={styles.infoText}>{item.user}</Text>
+            <Text style={styles.infoText}>{item.user?.username}</Text>
           </View>
           
           <View style={styles.infoRow}>
@@ -228,8 +228,12 @@ const AdminOrders = () => {
                 </View>
                 
                 <View style={styles.detailRow}>
-                  <Text style={styles.modalLabel}>User:</Text>
-                  <Text style={styles.modalValue}>{selectedOrder.user}</Text>
+                  <Text style={styles.modalLabel}>User ID:</Text>
+                  <Text style={styles.modalValue}>{selectedOrder.user?._id}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.modalLabel}>User name:</Text>
+                  <Text style={styles.modalValue}>{selectedOrder.user?.username}</Text>
                 </View>
                 
                 <View style={styles.detailRow}>
