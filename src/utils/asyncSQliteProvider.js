@@ -28,5 +28,10 @@ export const AsyncSQLiteProvider = ({ children, databaseName, onInit }) => {
 };
 
 export const useAsyncSQLiteContext = () => {
-  return useContext(AsyncSQLiteContext);
+  const context = useContext(AsyncSQLiteContext);
+  if (context === null) {
+    // Optionally, you can throw an error if you want to enforce that consumers only render once ready.
+    // throw new Error('useAsyncSQLiteContext must be used within an AsyncSQLiteProvider that has initialized the DB');
+  }
+  return context;
 };

@@ -1,9 +1,10 @@
 // reducer/authReducer.js
 import { createSlice } from '@reduxjs/toolkit';
-import { loginUser, signupUser, logoutUser, googleLogin } from '../actions/authAction';
+import { loginUser, signupUser, logoutUser, googleLogin, verifyUser } from '../actions/authAction';
 
 const initialState = {
   user: null,
+  orders: [],
   loading: false,
   error: null,
 };
@@ -55,8 +56,7 @@ const authSlice = createSlice({
       })
       .addCase(signupUser.fulfilled, (state, action) => {
         state.loading = false;
-        // Optionally auto-login after signup:
-        // state.user = action.payload;
+        state.user = action.payload;
       })
       .addCase(signupUser.rejected, (state, action) => {
         state.loading = false;
@@ -64,6 +64,19 @@ const authSlice = createSlice({
       })
       // Logout actions
       .addCase(logoutUser.fulfilled, (state) => {
+        state.user = null;
+      })
+      .addCase(verifyUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(verifyUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload; // Update the user in state with the verified user
+      })
+      .addCase(verifyUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
         state.user = null;
       });
   },

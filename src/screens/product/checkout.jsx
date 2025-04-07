@@ -9,6 +9,7 @@ import {
   Modal, 
   TouchableOpacity, 
   Alert, 
+  ActivityIndicator,
   Text 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,10 +18,16 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { globalStyles, spacing, colors } from '../../components/common/theme';
 import { getUserCredentials } from '../../utils/userStorage';
 import * as ImagePicker from 'expo-image-picker';
+import { useDispatch } from 'react-redux';
+import { createOrder } from '../../redux/actions/orderAction';
+import Toast from 'react-native-toast-message';
+import { useAsyncSQLiteContext } from '../../utils/asyncSQliteProvider';
 
 const Checkout = () => {
+  const dispatch = useDispatch();
   const navigation = useNavigation();
   const { params } = useRoute();
+  const db = useAsyncSQLiteContext();
   const [shippingAddress, setShippingAddress] = useState({
     street: '',
     city: '',
@@ -30,6 +37,7 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState('');
   const [proofOfPayment, setProofOfPayment] = useState(null);
   const [proofModalVisible, setProofModalVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Function to fetch and set the saved address from AsyncStorage.
   const handleUseExistingAddress = async () => {
@@ -103,6 +111,57 @@ const Checkout = () => {
       const uri = result.assets[0].uri;
       setProofOfPayment(uri);
       setProofModalVisible(false);
+    }
+  };
+
+  const handlePlaceOrder = async () => {
+    try {
+      setIsLoading(true);
+      const user = await getUserCredentials();
+      console.log('User:', user);
+  
+      if (!user || !user._id) {
+        Alert.alert('Error', 'User information is missing. Please log in again.');
+        setIsLoading(false);
+        return;
+      }
+  
+      const orderDetails = {
+        userId: user._id, 
+        shippingAddress,
+        paymentMethod,
+        selectedProducts,
+        subtotal,
+        vat,
+        shippingFee,
+        total,
+        ...(paymentMethod === 'GCash' && { proofOfPayment }), // Include proofOfPayment only if paymentMethod is GCash
+      };
+  
+      console.log('Placing Order');
+      console.log('Order Details:', orderDetails);
+  
+      dispatch(createOrder({ orderDetails, db }))
+        .unwrap()
+        .then((order) => {
+          console.log('Order placed successfully:', order);
+          Toast.show({
+            type: 'success',
+            text1: 'Order placed successfully!',
+            text2: 'Thank you for your order.',
+          });
+          navigation.navigate('Home');
+        })
+        .catch((error) => {
+          Alert.alert('Order failed', error.message || 'An error occurred while placing the order 001.');
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    } catch (error) {
+      console.error('Error placing order:', error);
+      Alert.alert('Error', 'An error occurred while placing the order 002.');
+      setIsLoading(false);
     }
   };
 
@@ -227,13 +286,21 @@ const Checkout = () => {
           </Button>
           <Button
             mode="contained"
-            onPress={() => console.log('Proceed to payment')}
+            onPress={handlePlaceOrder}
             style={[styles.payButton, styles.checkoutButton]}
             labelStyle={styles.payButtonLabel}
+            disabled={isLoading}
           >
-            Place Order
+            {isLoading ? 'Placing Order...' : 'Place Order'}
           </Button>
         </View>
+
+        {/* Loader */}
+        {isLoading && (
+          <View style={styles.loaderContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        )}
 
         {/* Modal for Proof of Payment Image Picker */}
         <Modal
@@ -398,6 +465,17 @@ const styles = StyleSheet.create({
     margin: 20,
     padding: 20,
     borderRadius: 10,
+  },
+  loaderContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
+    zIndex: 10,
   },
   modalTitle: {
     fontSize: 20,

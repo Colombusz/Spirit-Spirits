@@ -69,6 +69,12 @@
       [
         "expo-build-properties",
         {}
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "This app accesses your photos to let you share them with your friends."
+        }
       ]
     ],
     "owner": "reimuhakurei"

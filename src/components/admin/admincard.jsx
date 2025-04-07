@@ -1,28 +1,41 @@
-import React, { useState, useRef } from 'react';
-import { View, StyleSheet, Dimensions, Animated } from 'react-native';
-import { Card, Text, Title, useTheme } from 'react-native-paper';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, StyleSheet, Dimensions, Animated, Alert } from 'react-native';
+import { Card, Text, Title, useTheme, IconButton, Provider } from 'react-native-paper';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 const ITEM_WIDTH = width * 0.8;
 const ITEM_HEIGHT = 160;
 const SPACING = 10;
 
-// Create animated FlatList component
 const AnimatedFlatList = Animated.createAnimatedComponent(Animated.FlatList);
 
-const CardItem = ({ liqour }) => {
+const CardItem = ({ liquor, onDelete }) => { // Receive handleDeleteLiquor as a prop
+  const navigation = useNavigation();
   const theme = useTheme();
   const scrollX = useRef(new Animated.Value(0)).current;
   const [activeIndex, setActiveIndex] = useState(0);
-  
-  // Handle image carousel scroll events
+
+  const currentLiquor = useSelector((state) => state.liquor.currentLiquor);
+
   const handleOnScroll = (event) => {
     const scrollPosition = event.nativeEvent.contentOffset.x;
     const index = Math.round(scrollPosition / ITEM_WIDTH);
     setActiveIndex(index);
   };
 
-  // Render image in carousel
+  // Fetch liquor details by ID
+  const handleCurrentLiquor = (liquor) => {
+    navigation.navigate('EditLiquor', { liquor: liquor });
+  };
+
+  useEffect(() => {
+    if (currentLiquor) {
+      console.log(currentLiquor);
+    }
+  }, [currentLiquor]);
+
   const renderImage = ({ item, index }) => {
     const inputRange = [
       (index - 1) * ITEM_WIDTH,
@@ -51,67 +64,80 @@ const CardItem = ({ liqour }) => {
           opacity,
         }}
       >
-        <Card.Cover
-          source={{ uri: item.url }}
-          style={styles.productImage}
-        />
+        <Card.Cover source={{ uri: item.url }} style={styles.productImage} />
       </Animated.View>
     );
   };
 
-  // Render pagination dots
-  const renderPaginationDots = () => {
-    return (
-      <View style={styles.paginationContainer}>
-        {liqour.images.map((_, index) => (
-          <View
-            key={index}
-            style={[
-              styles.paginationDot,
-              { backgroundColor: index === activeIndex ? theme.colors.primary : theme.colors.backdrop }
-            ]}
-          />
-        ))}
-      </View>
-    );
-  };
+  const renderPaginationDots = () => (
+    <View style={styles.paginationContainer}>
+      {liquor.images.map((_, index) => (
+        <View
+          key={index}
+          style={[
+            styles.paginationDot,
+            {
+              backgroundColor: index === activeIndex ? theme.colors.primary : theme.colors.backdrop,
+            },
+          ]}
+        />
+      ))}
+    </View>
+  );
 
   return (
-    <Card style={styles.cardItem}>
-      <Card.Content>
-        <View style={styles.carouselContainer}>
-          <AnimatedFlatList
-            data={liqour.images}
-            keyExtractor={(_, index) => `image-${index}`}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            snapToInterval={ITEM_WIDTH}
-            decelerationRate="fast"
-            pagingEnabled
-            bounces={false}
-            contentContainerStyle={styles.carouselContent}
-            onScroll={Animated.event(
-              [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-              { useNativeDriver: true, listener: handleOnScroll }
+    <Provider>
+      <Card style={styles.cardItem}>
+        <Card.Content>
+          <View style={styles.headerContainer}>
+            <Title>{liquor.brand}</Title>
+            <View style={styles.buttonGroup}>
+              <IconButton
+                icon="pencil-outline"
+                onPress={() => handleCurrentLiquor(liquor)}
+                size={24}
+              />
+              <IconButton
+                icon="trash-can-outline"
+                onPress={() => onDelete()} // Use the prop function here
+                size={24}
+              />
+            </View>
+          </View>
+
+          <View style={styles.carouselContainer}>
+            <AnimatedFlatList
+              data={liquor.images}
+              keyExtractor={(_, index) => `image-${index}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              snapToInterval={ITEM_WIDTH}
+              decelerationRate="fast"
+              pagingEnabled
+              bounces={false}
+              contentContainerStyle={styles.carouselContent}
+              onScroll={Animated.event(
+                [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+                { useNativeDriver: true, listener: handleOnScroll }
+              )}
+              renderItem={renderImage}
+            />
+            {renderPaginationDots()}
+          </View>
+
+          <View style={styles.textContainer}>
+            {liquor.description && (
+              <Text style={styles.descriptionText} numberOfLines={2}>
+                {liquor.description}
+              </Text>
             )}
-            renderItem={renderImage}
-          />
-          {renderPaginationDots()}
-        </View>
-        
-        <View style={styles.textContainer}>
-          <Title>{liqour.brand}</Title>
-          {liqour.description && (
-            <Text style={styles.descriptionText} numberOfLines={2}>
-              {liqour.description}
-            </Text>
-          )}
-          {liqour.price && (
-            <Text style={styles.priceText}>${liqour.price}</Text>
-          )}
-        </View>
-      </Card.Content>
-    </Card>
+            {liquor.price && (
+              <Text style={styles.priceText}>${liquor.price}</Text>
+            )}
+          </View>
+        </Card.Content>
+      </Card>
+    </Provider>
   );
 };
 
@@ -121,6 +147,17 @@ const styles = StyleSheet.create({
     elevation: 4,
     borderRadius: 12,
     overflow: 'hidden',
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: -8,
   },
   carouselContainer: {
     height: ITEM_HEIGHT + 20,

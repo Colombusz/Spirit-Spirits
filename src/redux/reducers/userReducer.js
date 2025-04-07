@@ -1,9 +1,10 @@
 // userReducer.js
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchCurrentUser, updateProfile } from '../actions/userAction';
+import { fetchCurrentUser, updateProfile, uploadNotifToken } from '../actions/userAction';
 
 const initialState = {
   currentUser: null,
+  expoPushToken: null,
   loading: false,
   error: null,
 };
@@ -40,7 +41,21 @@ const userSlice = createSlice({
       .addCase(updateProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      });
+      })
+      
+      .addCase(uploadNotifToken.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(uploadNotifToken.fulfilled, (state, action) => {
+        state.loading = false;
+        state.expoPushToken = action.payload;
+      })
+      .addCase(uploadNotifToken.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      ;
   },
 });
 

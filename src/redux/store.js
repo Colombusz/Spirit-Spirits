@@ -4,6 +4,10 @@ import authReducer from './reducers/authReducer';
 import liquorReducer from './reducers/liquorReducer';
 import userReducer from './reducers/userReducer';
 import cartReducer from './reducers/cartReducer';
+import createLiquorReducer from './slices/createLiqourSlice';
+import orderReducer from './reducers/orderReducer'; 
+import reviewReducer from './reducers/reviewReducer';
+import promoReducer from './reducers/promoReducer';
 
 const store = configureStore({
   reducer: {
@@ -11,6 +15,10 @@ const store = configureStore({
     liquor: liquorReducer,
     user: userReducer,
     cart: cartReducer,
+    createdLiquor: createLiquorReducer,
+    order: orderReducer,
+    review: reviewReducer,
+    promo: promoReducer,
   },
 });
 

@@ -1,14 +1,17 @@
 // AppDrawer.jsx
 import React, { useState, useCallback } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Dimensions } from 'react-native';
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
-import { Avatar, Title, Caption, Paragraph, IconButton } from 'react-native-paper';
+import { Avatar, Title, Caption, IconButton, Divider } from 'react-native-paper';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { getUserCredentials } from '../../utils/userStorage';
+import defaultAvatar from '../../../assets/ghost.png';
+import { colors, spacing, fonts } from './theme';
 
-const AppDrawer = ({ closeDrawer }) => {
-  const navigation = useNavigation();
+const SCREEN_HEIGHT = Dimensions.get('window').height;
+
+const AppDrawer = ({ closeDrawer, navigation }) => {
   const [user, setUser] = useState(null);
 
   // Refresh user data every time the drawer is focused
@@ -28,171 +31,265 @@ const AppDrawer = ({ closeDrawer }) => {
     }, [])
   );
 
-  return (
-    <DrawerContentScrollView>
-      <View style={styles.drawerContent}>
-        {/* Close Button */}
-        <IconButton
-          icon="close"
-          onPress={closeDrawer}
-          style={{ alignSelf: 'flex-end' }}
+  const renderIcon = (name, focused) => {
+    return (
+      <View style={styles.iconContainer}>
+        <Ionicons 
+          name={name} 
+          color={focused ? colors.primary : colors.bronzeShade7} 
+          size={24} 
         />
-
-        {/* USER INFO SECTION */}
-        <View style={styles.userInfoSection}>
-          <View style={{ flexDirection: 'row', marginTop: 15 }}>
-            <Avatar.Image
-              source={{
-                uri: user?.image?.url || 'https://via.placeholder.com/150',
-              }}
-              size={70}
-            />
-            <View style={{ marginLeft: 15, flexDirection: 'column' }}>
-              <Title style={styles.title}>{user?.firstname || 'Guest'}</Title>
-              <Caption style={styles.caption}>
-                @{user?.username || 'guest_user'}
-              </Caption>
-            </View>
-          </View>
-
-          <View style={styles.row}>
-            {/* <View style={styles.section}>
-              <Paragraph style={[styles.paragraph, styles.caption]}>
-                80
-              </Paragraph>
-              <Caption style={styles.caption}>Following</Caption>
-            </View>
-            <View style={styles.section}>
-              <Paragraph style={[styles.paragraph, styles.caption]}>
-                100
-              </Paragraph>
-              <Caption style={styles.caption}>Followers</Caption>
-            </View> */}
-          </View>
-        </View>
-
-        {/* NAVIGATION ITEMS */}
-        <View style={styles.drawerSection}>
-          <DrawerItem
-            icon={({ color, size }) => (
-              <Ionicons name="home" color={color} size={size} />
-            )}
-            label="Home"
-            onPress={() => {
-              navigation.navigate('Home');
-              closeDrawer();
-            }}
-          />
-          <DrawerItem
-            icon={({ color, size }) => (
-              <Ionicons name="person-outline" color={color} size={size} />
-            )}
-            label="Account"
-            onPress={() => {
-              navigation.navigate('Account');
-              closeDrawer();
-            }}
-          />
-          <DrawerItem
-            icon={({ color, size }) => (
-              <Ionicons name="alert-circle-outline" color={color} size={size} />
-            )}
-            label="About"
-            onPress={() => {
-              navigation.navigate('About');
-              closeDrawer();
-            }}
-          />
-          <DrawerItem
-            icon={({ color, size }) => (
-              <Ionicons name="cart-outline" color={color} size={size} />
-            )}
-            label="Cart"
-            onPress={() => {
-              navigation.navigate('Cart');
-              closeDrawer();
-            }}
-          />
-          <DrawerItem
-            icon={({ color, size }) => (
-              <Ionicons name="list-outline" color={color} size={size} />
-            )}
-            label="More"
-            onPress={() => {
-              navigation.navigate('More');
-              closeDrawer();
-            }}
-          />
-          <DrawerItem
-            icon={({ color, size }) => (
-              <Ionicons name="card-outline" color={color} size={size} />
-            )}
-            label="Payments"
-            onPress={() => {
-              navigation.navigate('Payments');
-              closeDrawer();
-            }}
-          />
-          {/* Additional items for testing */}
-          <DrawerItem
-            icon={({ color, size }) => (
-              <Ionicons name="card-outline" color={color} size={size} />
-            )}
-            label="Login: testing"
-            onPress={() => {
-              navigation.navigate('Login');
-              closeDrawer();
-            }}
-          />
-          <DrawerItem
-            icon={({ color, size }) => (
-              <Ionicons name="card-outline" color={color} size={size} />
-            )}
-            label="Signup: testing"
-            onPress={() => {
-              navigation.navigate('Signup');
-              closeDrawer();
-            }}
-          />
-        </View>
       </View>
-    </DrawerContentScrollView>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <DrawerContentScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.drawerContent}>
+          {/* Close Button */}
+          <IconButton
+            icon="close"
+            color={colors.bronzeShade7}
+            size={28}
+            onPress={closeDrawer}
+            style={styles.closeButton}
+          />
+
+          {/* USER INFO SECTION */}
+          <View style={styles.userInfoSection}>
+            <View style={styles.avatarContainer}>
+              <Avatar.Image
+                source={
+                  user?.image?.url
+                    ? { uri: user.image.url }
+                    : defaultAvatar
+                }
+                size={80}
+                style={styles.avatar}
+              />
+              <View style={styles.userTextContainer}>
+                <Title style={styles.title}>{user?.firstname || 'Guest'}</Title>
+                <Caption style={styles.caption}>
+                  @{user?.username || 'guest_user'}
+                </Caption>
+              </View>
+            </View>
+          </View>
+
+          <Divider style={styles.divider} />
+
+          {/* NAVIGATION ITEMS */}
+          <View style={styles.drawerSection}>
+            {/* Always show Home */}
+            <DrawerItem
+              icon={({ focused }) => renderIcon('home', focused)}
+              label="Home"
+              labelStyle={styles.drawerLabel}
+              activeBackgroundColor={`${colors.ivory4}CC`}
+              activeTintColor={colors.primary}
+              inactiveTintColor={colors.bronzeShade8}
+              onPress={() => {
+                navigation.navigate('Home');
+                closeDrawer();
+              }}
+            />
+
+            {/* Guest Users Navigation */}
+            {!user && (
+              <>
+                <DrawerItem
+                  icon={({ focused }) => renderIcon('log-in-outline', focused)}
+                  label="Login"
+                  labelStyle={styles.drawerLabel}
+                  activeBackgroundColor={`${colors.ivory4}CC`}
+                  activeTintColor={colors.primary}
+                  inactiveTintColor={colors.bronzeShade8}
+                  onPress={() => {
+                    navigation.navigate('Login');
+                    closeDrawer();
+                  }}
+                />
+                <DrawerItem
+                  icon={({ focused }) => renderIcon('person-add-outline', focused)}
+                  label="Signup"
+                  labelStyle={styles.drawerLabel}
+                  activeBackgroundColor={`${colors.ivory4}CC`}
+                  activeTintColor={colors.primary}
+                  inactiveTintColor={colors.bronzeShade8}
+                  onPress={() => {
+                    navigation.navigate('Signup');
+                    closeDrawer();
+                  }}
+                />
+                <DrawerItem
+                  icon={({ focused }) => renderIcon('alert-circle-outline', focused)}
+                  label="About"
+                  labelStyle={styles.drawerLabel}
+                  activeBackgroundColor={`${colors.ivory4}CC`}
+                  activeTintColor={colors.primary}
+                  inactiveTintColor={colors.bronzeShade8}
+                  onPress={() => {
+                    navigation.navigate('About');
+                    closeDrawer();
+                  }}
+                />
+              </>
+            )}
+
+            {/* Logged-in Users Navigation */}
+            {user && (
+              <>
+                <DrawerItem
+                  icon={({ focused }) => renderIcon('person-outline', focused)}
+                  label="Account"
+                  labelStyle={styles.drawerLabel}
+                  activeBackgroundColor={`${colors.ivory4}CC`}
+                  activeTintColor={colors.primary}
+                  inactiveTintColor={colors.bronzeShade8}
+                  onPress={() => {
+                    navigation.navigate('Account');
+                    closeDrawer();
+                  }}
+                />
+                <DrawerItem
+                  icon={({ focused }) => renderIcon('cart-outline', focused)}
+                  label="Cart"
+                  labelStyle={styles.drawerLabel}
+                  activeBackgroundColor={`${colors.ivory4}CC`}
+                  activeTintColor={colors.primary}
+                  inactiveTintColor={colors.bronzeShade8}
+                  onPress={() => {
+                    navigation.navigate('Cart');
+                    closeDrawer();
+                  }}
+                />
+                <DrawerItem
+                  icon={({ focused }) => renderIcon('receipt-outline', focused)}
+                  label="Orders"
+                  labelStyle={styles.drawerLabel}
+                  activeBackgroundColor={`${colors.ivory4}CC`}
+                  activeTintColor={colors.primary}
+                  inactiveTintColor={colors.bronzeShade8}
+                  onPress={() => {
+                    navigation.navigate('UserOrders');
+                    closeDrawer();
+                  }}
+                />
+                <DrawerItem
+                  icon={({ focused }) => renderIcon('alert-circle-outline', focused)}
+                  label="About"
+                  labelStyle={styles.drawerLabel}
+                  activeBackgroundColor={`${colors.ivory4}CC`}
+                  activeTintColor={colors.primary}
+                  inactiveTintColor={colors.bronzeShade8}
+                  onPress={() => {
+                    navigation.navigate('About');
+                    closeDrawer();
+                  }}
+                />
+                <Divider style={styles.divider} />
+              </>
+            )}
+          </View>
+
+          {/* APP VERSION FOOTER */}
+          <View style={styles.footer}>
+          <Caption style={styles.versionText}>Spirit & Spirits</Caption>
+            <Caption style={styles.versionText}>App Version 1.0.0</Caption>
+          </View>
+        </View>
+      </DrawerContentScrollView>
+    </View>
   );
 };
 
 export default AppDrawer;
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 240, 0)', // Semi-transparent ivory background
+  },
+  scrollContent: {
+    minHeight: SCREEN_HEIGHT,
+    opacity: 0.9,
+  },
   drawerContent: {
     flex: 1,
+    paddingTop: 20,
+    paddingBottom: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)', // Add semi-transparent background to the drawer content
+    borderRadius: 10,
+  },
+  closeButton: {
+    alignSelf: 'flex-end',
+    margin: spacing.small,
+    backgroundColor: `${colors.ivory3}CC`,
   },
   userInfoSection: {
-    paddingLeft: 20,
-    marginBottom: 10,
+    paddingHorizontal: spacing.medium,
+    marginBottom: spacing.large,
+  },
+  avatarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.medium,
+  },
+  avatar: {
+    backgroundColor: colors.ivory4,
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
+  userTextContainer: {
+    marginLeft: spacing.medium,
+    flexDirection: 'column',
   },
   title: {
-    fontSize: 16,
-    marginTop: 3,
+    fontSize: 18,
     fontWeight: 'bold',
+    color: colors.bronzeShade7,
+    fontFamily: fonts.medium,
   },
   caption: {
     fontSize: 14,
-    lineHeight: 14,
+    color: colors.bronzeShade5,
+    fontFamily: fonts.regular,
   },
-  row: {
-    marginTop: 20,
-    flexDirection: 'row',
-  },
-  section: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 15,
-  },
-  paragraph: {
-    fontWeight: 'bold',
-    marginRight: 3,
+  divider: {
+    height: 1,
+    backgroundColor: colors.bronzeShade3,
+    opacity: 0.3,
+    marginVertical: spacing.medium,
+    marginHorizontal: spacing.medium,
   },
   drawerSection: {
-    marginTop: 15,
+    marginTop: spacing.small,
+  },
+  drawerLabel: {
+    fontSize: 16,
+    fontFamily: fonts.regular,
+    fontWeight: '500',
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: `${colors.ivory3}CC`,
+  },
+  footer: {
+    marginTop: 'auto',
+    padding: spacing.medium,
+    alignItems: 'center',
+  },
+  versionText: {
+    fontSize: 12,
+    color: colors.bronzeShade4,
+    fontFamily: fonts.light,
   },
 });

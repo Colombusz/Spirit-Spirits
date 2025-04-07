@@ -34,6 +34,9 @@ export const colors = {
     ivory4: '#f8f2dd',
     ivory5: '#f7f0d9',
     ivory6: '#f9f4e2',
+
+    // Star color
+    starYellow: '#FFD700',
   };
   
   export const spacing = {
