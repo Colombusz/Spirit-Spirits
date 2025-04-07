@@ -12,7 +12,7 @@
       "backgroundColor": "#ffffff"
     },
     "extra": {
-      "BACKEND_URL": "http://192.168.100.12:5000",
+      "BACKEND_URL": "http://192.168.177.87:5000",
       "eas": {
         "projectId": "b577b503-6578-436e-bfe3-bc3623f1acc5"
       }

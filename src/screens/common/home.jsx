@@ -11,7 +11,7 @@ import {
   Image,
   StatusBar,
 } from 'react-native';
-import { Card, Title, Paragraph, IconButton } from 'react-native-paper';
+import { Card, Title, Paragraph, IconButton, FAB } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchLiquors } from '../../redux/actions/liquorAction';
@@ -19,7 +19,8 @@ import { useAsyncSQLiteContext } from '../../utils/asyncSQliteProvider';
 import { colors, spacing, globalStyles, fonts } from '../../components/common/theme';
 import Toast from 'react-native-toast-message';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-
+import TopDrawer from '../common/topDrawerPromotion';
+import { getAllPromos } from '../../redux/actions/promoAction'; // Import the action to fetch promos
 const categories = [
   { label: 'All', value: '', icon: 'glass-cocktail' },
   { label: 'Vodka', value: 'Vodka', icon: 'bottle-wine' },
@@ -40,6 +41,7 @@ const categories = [
 ];
 
 const Home = () => {
+
   const db = useAsyncSQLiteContext();
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -53,6 +55,21 @@ const Home = () => {
   // States for collapsible sections
   const [showCategory, setShowCategory] = useState(false);
   const [showSort, setShowSort] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const toggleDrawer = () => {
+    setDrawerOpen((prevState) => !prevState);
+  };
+  
+  
+  const { promos } = useSelector((state) => state.promo);
+  
+    useEffect(() => {
+      dispatch(getAllPromos());
+      console.log("Promos Loaded:", promos); // Debugging log
+    }, [dispatch]);
+
+  const promoData = promos.data;
 
   // Fetch liquors when filters change
   useEffect(() => {
@@ -66,6 +83,19 @@ const Home = () => {
 
   const handleSearchChange = (text) => {
     setSearchQuery(text);
+  };
+
+  const handlePromoPress = () => {
+    // Navigate to promotions screen or show promotions
+    // navigation.navigate('Promotions');
+    // Alternatively, show a toast with promo info
+    Toast.show({
+      type: 'success',
+      text1: 'Current Promotions',
+      text2: 'Check out our special offers!',
+      position: 'bottom',
+      visibilityTime: 3000,
+    });
   };
 
   const renderLiquorItem = ({ item }) => {
@@ -87,7 +117,18 @@ const Home = () => {
         <Card.Content>
           <Title numberOfLines={1} style={styles.cardTitle}>{item.name}</Title>
 
-          <Paragraph style={styles.price}>₱{item.price}</Paragraph>
+          {item.promoPrice ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Paragraph style={[styles.price, { textDecorationLine: 'line-through', color: 'gray' }]}>
+                ₱{item.price}
+              </Paragraph>
+              <Paragraph style={[styles.price, { color: 'red', fontWeight: 'bold' }]}>
+              ₱{Number(item.promoPrice).toFixed(2)}
+              </Paragraph>
+            </View>
+          ) : (
+            <Paragraph style={styles.price}>₱{item.price}</Paragraph>
+          )}
         </Card.Content>
       </Card>
     );
@@ -293,7 +334,6 @@ const Home = () => {
         </View>
       ) : (
         <FlatList
-          key={`flatlist-2`}
           data={liquors}
           keyExtractor={(item) => item._id}
           renderItem={renderLiquorItem}
@@ -304,11 +344,25 @@ const Home = () => {
           showsVerticalScrollIndicator={false}
         />
       )}
-    </View>
+
+      {/* FAB with promo icon */}
+      <FAB
+        icon="sale"
+        label="Promos"
+        style={styles.fab}
+        color={colors.surface}
+        onPress={toggleDrawer} // Toggle drawer on FAB press
+      />
+
+      {/* TopDrawer */}
+      <TopDrawer
+        state={drawerOpen} // Pass drawerOpen state
+        promotions={promoData}
+        onClose={toggleDrawer} // Pass toggleDrawer to handle close
+      />
+    </View> 
   );
 };
-
-export default Home;
 
 const styles = StyleSheet.create({
   containerOverride: {
@@ -584,4 +638,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: spacing.small,
   },
+  // FAB styles
+  fab: {
+    position: 'absolute',
+    margin: 16,
+    right: spacing.medium,
+    bottom: spacing.large,
+    backgroundColor: colors.bronzeShade4,
+    borderRadius: 28,
+    elevation: 6,
+    borderWidth: 1, 
+    borderColor: colors.bronzeShade3,
+  },
 });
+
+export default Home;

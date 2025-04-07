@@ -30,13 +30,30 @@ import PromoCarousel from '../screens/admin/promolist';
 import AppDrawer from '../components/common/appdrawer';
 import AdminAppDrawer from '../components/admin/navbar';
 
+import { useEffect, useRef } from 'react';
+import * as Notifications from 'expo-notifications';
+import { Modal, Text, Pressable } from 'react-native';
+
 const Stack = createStackNavigator();
 export const navigationRef = createNavigationContainerRef();
 
 const Navigator = () => {
+  const [modalVisible, setModalVisible] = useState(false);
+const [notificationData, setNotificationData] = useState(null);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const user = useSelector((state) => state.auth.user);
 
+  useEffect(() => {
+    const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+      const message = response?.notification?.request?.content?.body;
+      setNotificationData({ message });
+      setModalVisible(true);
+    });
+  
+    return () => {
+      subscription.remove();
+    };
+  }, []);
   // While user state is undefined (e.g., during startup), show a spinner
   if (user === undefined) {
     return (
@@ -112,6 +129,24 @@ const Navigator = () => {
                   navigation={navigationRef} // Pass navigation explicitly
                 />
               )}
+              {/* Notification Modal */}
+                <Modal
+                  animationType="fade"
+                  transparent={true}
+                  visible={modalVisible}
+                  onRequestClose={() => setModalVisible(false)}
+                >
+                  <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                      <Text style={styles.modalTitle}>Notification</Text>
+                      <Text>{notificationData?.message || 'You tapped a notification!'}</Text>
+                      <Pressable style={styles.modalCloseButton} onPress={() => setModalVisible(false)}>
+                        <Text style={{ color: 'white' }}>Close</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                </Modal>
+
             </View>
           )}
         </View>
@@ -145,6 +180,31 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     zIndex: 20,
     elevation: 10,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    width: '80%',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  modalCloseButton: {
+    marginTop: 20,
+    backgroundColor: '#000',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 5,
   },
 });
 

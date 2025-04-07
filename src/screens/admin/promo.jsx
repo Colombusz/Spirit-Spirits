@@ -1,9 +1,11 @@
 import * as React from 'react';
-import { View, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions } from 'react-native';
-import { Provider as PaperProvider, TextInput, Button, Text, Menu, Portal, Modal, DefaultTheme } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
+import { Provider as PaperProvider, TextInput, Button, Text, Menu, Portal, Modal, DefaultTheme, Snackbar } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
 import { useDispatch } from 'react-redux';
-import { createPromo } from '../../redux/actions/promoAction'; // Import the createPromo action
+import { createPromo } from '../../redux/actions/promoAction';
+import { useNavigation } from '@react-navigation/native';
+
 // Custom theme with bronze color palette
 const bronzeTheme = {
   ...DefaultTheme,
@@ -20,7 +22,8 @@ const bronzeTheme = {
 };
 
 export default function DiscountProductForm() {
-    const dispatch = useDispatch();
+  const dispatch = useDispatch();
+  const navigation = useNavigation();
   const [name, setName] = React.useState('');
   const [discountRate, setDiscountRate] = React.useState('');
   const [description, setDescription] = React.useState('');
@@ -30,6 +33,9 @@ export default function DiscountProductForm() {
   const [submitted, setSubmitted] = React.useState(false);
   const [imageModalVisible, setImageModalVisible] = React.useState(false);
   const [selectedImage, setSelectedImage] = React.useState(null);
+  const [loading, setLoading] = React.useState(false);
+  const [snackbarVisible, setSnackbarVisible] = React.useState(false);
+  const [snackbarMessage, setSnackbarMessage] = React.useState('');
 
   // Categories for dropdown
   const categories = [
@@ -102,8 +108,6 @@ export default function DiscountProductForm() {
     setImageModalVisible(true);
   };
 
-  
-
   const handleSubmit = () => {
     if (!name || !discountRate || !category || images.length === 0) {
       alert("Please fill all required fields and add at least one image.");
@@ -111,15 +115,27 @@ export default function DiscountProductForm() {
     }
   
     const promoDetails = { name, discountRate, description, category };
-  
+    
+    setLoading(true);
+    
     dispatch(createPromo({ promoDetails, images }))
       .unwrap()
       .then(() => {
         setSubmitted(true);
-        // Reset form here if needed
+        setSnackbarMessage("Discount item created successfully!");
+        setSnackbarVisible(true);
+        
+        // Set a timeout to navigate back after showing success message
+        setTimeout(() => {
+          setLoading(false);
+          navigation.goBack();
+        }, 2000);
       })
       .catch(err => {
         console.error("Failed to create promo:", err);
+        setLoading(false);
+        setSnackbarMessage("Failed to create discount item. Please try again.");
+        setSnackbarVisible(true);
       });
   };
 
@@ -135,7 +151,7 @@ export default function DiscountProductForm() {
           <Text variant="headlineMedium" style={styles.title}>Discount Item Form</Text>
 
           <TextInput
-            label="Product Name*"
+            label="Promo Name*"
             value={name}
             onChangeText={text => setName(text)}
             mode="outlined"
@@ -143,6 +159,7 @@ export default function DiscountProductForm() {
             outlineColor="#b9722d"
             activeOutlineColor="#cd7f32"
             textColor="#3e260f"
+            disabled={loading}
           />
 
           <TextInput
@@ -162,6 +179,7 @@ export default function DiscountProductForm() {
             activeOutlineColor="#cd7f32"
             textColor="#3e260f"
             right={<TextInput.Affix text="%" />}
+            disabled={loading}
           />
 
           <TextInput
@@ -175,18 +193,20 @@ export default function DiscountProductForm() {
             outlineColor="#b9722d"
             activeOutlineColor="#cd7f32"
             textColor="#3e260f"
+            disabled={loading}
           />
 
           {/* Category Dropdown */}
           <Text style={styles.sectionTitle}>Category*</Text>
           <Menu
-            visible={categoryVisible}
+            visible={categoryVisible && !loading}
             onDismiss={() => setCategoryVisible(false)}
             contentStyle={styles.menuContent}
             anchor={
               <TouchableOpacity 
-                style={styles.dropdownButton}
-                onPress={() => setCategoryVisible(true)}
+                style={[styles.dropdownButton, loading && styles.disabledInput]}
+                onPress={() => !loading && setCategoryVisible(true)}
+                disabled={loading}
               >
                 <Text style={styles.dropdownButtonText}>
                   {category ? categories.find(cat => cat.value === category)?.label : 'Select Category'}
@@ -203,6 +223,7 @@ export default function DiscountProductForm() {
                   setCategory(cat.value);
                   setCategoryVisible(false);
                 }}
+                disabled={loading}
               />
             ))}
           </Menu>
@@ -217,6 +238,7 @@ export default function DiscountProductForm() {
               style={styles.imageUploadButton}
               buttonColor="#f5eccf"
               textColor="#674019"
+              disabled={loading}
             >
               Gallery
             </Button>
@@ -227,6 +249,7 @@ export default function DiscountProductForm() {
               style={styles.imageUploadButton}
               buttonColor="#f5eccf"
               textColor="#674019"
+              disabled={loading}
             >
               Camera
             </Button>
@@ -237,7 +260,7 @@ export default function DiscountProductForm() {
             <View style={styles.imagePreviewContainer}>
               {images.map((image, index) => (
                 <View key={index} style={styles.imagePreviewWrapper}>
-                  <TouchableOpacity onPress={() => viewImage(image)}>
+                  <TouchableOpacity onPress={() => !loading && viewImage(image)} disabled={loading}>
                     <Image 
                       source={{ uri: image.uri }} 
                       style={[styles.imagePreview, {width: imageWidth, height: imageHeight}]} 
@@ -251,6 +274,7 @@ export default function DiscountProductForm() {
                     onPress={() => removeImage(index)}
                     style={styles.removeImageButton}
                     buttonColor="#a46628"
+                    disabled={loading}
                   />
                 </View>
               ))}
@@ -259,17 +283,36 @@ export default function DiscountProductForm() {
 
           <Text style={styles.helperText}>* Required fields</Text>
 
-          <Button 
-            mode="contained" 
-            onPress={handleSubmit} 
-            style={styles.submitButton}
-            buttonColor="#cd7f32"
-            textColor="#fffff0"
-          >
-            Submit
-          </Button>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#cd7f32" />
+              <Text style={styles.loadingText}>Creating discount item...</Text>
+            </View>
+          ) : (
+            <View>
+              <Button 
+                mode="contained" 
+                onPress={handleSubmit} 
+                style={styles.submitButton}
+                buttonColor="#cd7f32"
+                textColor="#fffff0"
+              >
+                Submit
+              </Button>
+              
+              <Button 
+                mode="outlined" 
+                onPress={() => navigation.goBack()} 
+                style={styles.cancelButton}
+                buttonColor="#f5eccf"
+                textColor="#674019"
+              >
+                Cancel
+              </Button>
+            </View>
+          )}
 
-          {submitted && (
+          {submitted && !loading && (
             <View style={styles.resultContainer}>
               <Text variant="titleMedium" style={styles.resultTitle}>Details Submitted:</Text>
               <Text style={styles.resultText}>Name: {name}</Text>
@@ -308,6 +351,16 @@ export default function DiscountProductForm() {
           )}
         </Modal>
       </Portal>
+
+      {/* Snackbar notification */}
+      <Snackbar
+        visible={snackbarVisible}
+        onDismiss={() => setSnackbarVisible(false)}
+        duration={2000}
+        style={styles.snackbar}
+      >
+        {snackbarMessage}
+      </Snackbar>
     </PaperProvider>
   );
 }
@@ -333,6 +386,9 @@ const styles = StyleSheet.create({
   input: {
     marginBottom: 16,
     backgroundColor: '#f9f4e2', // Light cream
+  },
+  disabledInput: {
+    opacity: 0.7,
   },
   sectionTitle: {
     fontSize: 16,
@@ -402,9 +458,27 @@ const styles = StyleSheet.create({
     color: '#7b4c1e',
     fontStyle: 'italic',
   },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 20,
+    padding: 16,
+    backgroundColor: '#f5eccf',
+    borderRadius: 8,
+  },
+  loadingText: {
+    marginTop: 12,
+    color: '#674019',
+    fontSize: 16,
+  },
   submitButton: {
     marginTop: 16,
     paddingVertical: 6,
+  },
+  cancelButton: {
+    marginTop: 12,
+    paddingVertical: 6,
+    borderColor: '#a46628',
   },
   resultContainer: {
     marginTop: 24,
@@ -438,5 +512,8 @@ const styles = StyleSheet.create({
   },
   closeModalButton: {
     marginTop: 16,
+  },
+  snackbar: {
+    backgroundColor: '#674019',
   }
 });

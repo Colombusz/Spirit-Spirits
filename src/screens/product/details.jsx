@@ -22,6 +22,7 @@ import { Toasthelper } from '../../components/common/toasthelper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { view } from 'drizzle-orm/sqlite-core';
 
+
 const { width } = Dimensions.get('window');
 const imageWidth = width - 40; // Full width minus some padding
 
@@ -192,11 +193,22 @@ const Details = () => {
                 <Paragraph style={styles.brandText}>Brand: {currentLiquor.brand}</Paragraph>
               </View>
               <View style={styles.priceContainer}>
-                <Text style={styles.price}>₱{currentLiquor.price}</Text>
+              {currentLiquor.promoPrice ? (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <Paragraph style={[styles.price, { textDecorationLine: 'line-through', color: 'gray' }]}>
+                            ₱{currentLiquor.price}
+                          </Paragraph>
+                          <Paragraph style={[styles.price, { color: 'red', fontWeight: 'bold' }]}>
+                          ₱{Number(currentLiquor.promoPrice).toFixed(2)}
+                          </Paragraph>
+                        </View>
+                      ) : (
+                        <Paragraph style={styles.price}>₱{currentLiquor.price}</Paragraph>
+                      )}
               </View>
             </View>
 
-     
+           
 
             <View style={styles.categoryBadge}>
               <Text style={styles.categoryText}>{currentLiquor.category}</Text>
